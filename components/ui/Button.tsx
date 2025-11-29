@@ -15,11 +15,12 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        // Primary - Indigo filled
-        primary: `bg-primary text-white hover:bg-primary-light
-                  shadow-[0_0_20px_rgba(78,92,255,0.3)]
-                  hover:shadow-[0_0_30px_rgba(78,92,255,0.4)]
-                  hover:-translate-y-0.5`,
+        // Primary - Cyan Neon Gaming Style
+        primary: `bg-primary text-white font-bold uppercase tracking-wider
+                  shadow-[0_0_20px_rgba(0,217,255,0.4)]
+                  hover:shadow-[0_0_35px_rgba(0,217,255,0.6)]
+                  hover:-translate-y-0.5
+                  hover:bg-primary-light`,
 
         // Secondary - Surface with border
         secondary: `bg-surface-2 text-text-primary border border-glass-border
@@ -34,20 +35,22 @@ const buttonVariants = cva(
         outline: `bg-transparent border border-glass-border text-text-primary
                   hover:bg-surface-1 hover:border-glass-border-elevated`,
 
-        // Accent - Gold for scores/achievements
-        accent: `bg-accent text-background hover:bg-accent-light
-                 shadow-[0_0_20px_rgba(255,176,58,0.3)]
-                 hover:shadow-[0_0_30px_rgba(255,176,58,0.4)]
+        // Accent - Orange for warnings/timer
+        accent: `bg-accent text-white font-bold uppercase tracking-wider
+                 shadow-[0_0_20px_rgba(255,107,53,0.4)]
+                 hover:shadow-[0_0_35px_rgba(255,107,53,0.6)]
                  hover:-translate-y-0.5`,
 
-        // Success - Green
-        success: `bg-success text-white hover:brightness-110
-                  shadow-[0_0_20px_rgba(16,185,129,0.3)]
+        // Success - Neon Green
+        success: `bg-success text-white font-bold uppercase tracking-wider
+                  shadow-[0_0_20px_rgba(0,255,136,0.4)]
+                  hover:shadow-[0_0_35px_rgba(0,255,136,0.6)]
                   hover:-translate-y-0.5`,
 
-        // Danger - Red
-        danger: `bg-error text-white hover:brightness-110
-                 shadow-[0_0_20px_rgba(239,68,68,0.3)]
+        // Danger - Neon Red
+        danger: `bg-error text-white font-bold uppercase tracking-wider
+                 shadow-[0_0_20px_rgba(255,51,102,0.4)]
+                 hover:shadow-[0_0_35px_rgba(255,51,102,0.6)]
                  hover:-translate-y-0.5`,
 
         // Glass - Glassmorphism effect

@@ -76,7 +76,7 @@ export default function LeaveGroupButton({ groupId, isOwner }: LeaveGroupButtonP
         onCancel={() => setShowModal(false)}
         confirmText={isOwner ? t("deleteButton") : t("leaveButton")}
         cancelText={tCommon("cancel")}
-        variant={isOwner ? "danger" : "warning"}
+        variant={isOwner ? "danger" : "accent"}
       />
     </>
   );

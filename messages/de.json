@@ -1,4 +1,10 @@
 {
+  "header": {
+    "myGroups": "Meine Gruppen",
+    "train": "Trainieren",
+    "logout": "Abmelden",
+    "login": "Anmelden"
+  },
   "common": {
     "back": "Zurück",
     "loading": "Laden...",
@@ -59,7 +65,8 @@
     "timeLimit": "Zeitlimit",
     "timeLimitSeconds": "{seconds} Sekunden",
     "noTimeLimit": "Kein Limit",
-    "changeSettings": "Einstellungen ändern"
+    "changeSettings": "Einstellungen ändern",
+    "roundLocations": "Runde {round} ({count} Orte)"
   },
   "game": {
     "newGame": "Neues Spiel",
@@ -117,7 +124,8 @@
     "nextLocation": "Nächster Ort",
     "resetStats": "Statistik zurücksetzen",
     "submit": "Tipp abgeben",
-    "placeMarker": "Setze einen Marker auf der Karte"
+    "placeMarker": "Setze einen Marker auf der Karte",
+    "placeMarkerHint": "Tippe auf die Karte, um einen Marker zu setzen"
   },
   "leaderboard": {
     "title": "Rangliste",

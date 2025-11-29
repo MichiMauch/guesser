@@ -5,7 +5,6 @@ import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import toast from "react-hot-toast";
 import { useTranslations } from "next-intl";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 
@@ -58,11 +57,6 @@ export default function LoginPage() {
 
       {/* Content */}
       <div className="relative z-10 w-full max-w-md mx-auto px-4">
-        {/* Language Switcher */}
-        <div className="absolute top-4 right-4 sm:top-8 sm:right-8">
-          <LanguageSwitcher />
-        </div>
-
         {/* Logo & Title */}
         <div className="text-center mb-8 animate-fade-in">
           {/* Swiss Flag Logo */}

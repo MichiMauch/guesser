@@ -385,26 +385,26 @@ export default function PlayPage({
             <h1 className="text-h3 text-primary">{t("result")}</h1>
           </div>
         </header>
-        <main className="max-w-xl mx-auto px-4 py-8">
-          <Card variant="elevated" padding="xl" className="text-center space-y-6">
-            <div className="space-y-2">
-              <span className="text-5xl">🎉</span>
-              <h2 className="text-h1 text-text-primary">
+        <main className="max-w-md mx-auto px-4 py-4">
+          <Card variant="elevated" padding="lg" className="text-center space-y-4">
+            <div className="space-y-1">
+              <span className="text-3xl">🎉</span>
+              <h2 className="text-h2 text-text-primary">
                 {t("roundComplete", { number: completedRoundNumber })}
               </h2>
-              <p className="text-text-secondary">
+              <p className="text-sm text-text-secondary">
                 {t("week", { number: game.weekNumber })}/{game.year}
               </p>
             </div>
 
-            <div className="py-6 rounded-xl bg-surface-2">
-              <p className="text-caption text-text-muted mb-1">{t("totalDistance")}</p>
-              <p className="text-display font-bold text-accent tabular-nums">
+            <div className="py-3 rounded-xl bg-surface-2">
+              <p className="text-xs text-text-muted mb-1">{t("totalDistance")}</p>
+              <p className="text-3xl font-bold text-accent tabular-nums">
                 {currentRoundDistance.toFixed(1)} km
               </p>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1">
               {currentRoundGuesses.map((guess) => {
                 const location = currentRoundLocations.find(
                   (r) => r.id === guess.gameRoundId
@@ -412,7 +412,7 @@ export default function PlayPage({
                 return (
                   <div
                     key={guess.gameRoundId}
-                    className="flex justify-between items-center p-3 rounded-xl bg-surface-2"
+                    className="flex justify-between items-center p-2 rounded-lg bg-surface-2"
                   >
                     <span className="text-text-secondary">{location?.locationName}</span>
                     <span
@@ -433,7 +433,7 @@ export default function PlayPage({
             </div>
 
             <Link href={`/${locale}/groups/${groupId}`}>
-              <Button variant="primary" size="lg" fullWidth>
+              <Button variant="primary" size="md" fullWidth>
                 {t("toLeaderboard")}
               </Button>
             </Link>
@@ -482,115 +482,140 @@ export default function PlayPage({
     );
   }
 
+  // Determine timer state for animations
+  const getTimerState = () => {
+    if (!timeRemaining) return "normal";
+    if (timeRemaining <= 5) return "critical";
+    if (timeRemaining <= 10) return "warning";
+    return "normal";
+  };
+  const timerState = getTimerState();
+
+  // Determine button text and action
+  const getButtonConfig = () => {
+    if (timeExpired && !showResult) {
+      return {
+        text: t("next"),
+        variant: "accent" as const,
+        onClick: handleTimeoutSubmit,
+        disabled: false,
+      };
+    }
+    if (showResult) {
+      const isLastRound = currentRoundIndex >= releasedRounds.length - 1;
+      const resultVariant = lastResult && lastResult.distanceKm < 20 ? "success" : "primary";
+      return {
+        text: isLastRound ? (allReleasedLocationsPlayed ? t("result") : t("wait")) : t("next"),
+        variant: resultVariant as "success" | "primary",
+        onClick: () => {
+          if (!isLastRound) {
+            handleNextRound();
+          } else if (allReleasedLocationsPlayed) {
+            setShowRoundSummary(true);
+          } else {
+            router.push(`/${locale}/groups/${groupId}`);
+          }
+        },
+        disabled: false,
+      };
+    }
+    return {
+      text: markerPosition ? t("submit") : t("placeMarker"),
+      variant: "primary" as const,
+      onClick: handleGuess,
+      disabled: !markerPosition,
+    };
+  };
+
+  const buttonConfig = getButtonConfig();
+
   return (
-    <div className="h-screen bg-background flex flex-col overflow-hidden">
-      {/* Back button - klein oben links */}
-      <div className="px-3 py-2">
-        <Link
-          href={`/${locale}/groups/${groupId}`}
-          className="text-text-muted hover:text-text-primary text-sm"
-        >
-          ← {tCommon("back")}
-        </Link>
-      </div>
+    <div className="h-[calc(100dvh-52px)] max-w-[1440px] mx-auto relative">
+      {/* Fullscreen Map */}
+      <SwitzerlandMap
+        onMarkerPlace={showResult || timeExpired ? undefined : setMarkerPosition}
+        markerPosition={markerPosition}
+        targetPosition={
+          showResult && lastResult
+            ? { lat: lastResult.targetLat, lng: lastResult.targetLng }
+            : null
+        }
+        showTarget={showResult}
+        interactive={!showResult && !isLocationPlayed && !timeExpired}
+        height="100%"
+        hintCircle={!showResult && !isLocationPlayed ? hintCircle : null}
+      />
 
-      {/* Zentrierter Block: Ort + Timer + Button */}
+      {/* Kombiniertes Badge - zentriert */}
       {currentRound && (
-        <div className="flex flex-col items-center py-4 bg-surface-1 border-b border-glass-border">
-          {/* Ortsname */}
-          <h1 className="text-4xl font-bold text-text-primary">
-            {currentRound.locationName}
-          </h1>
-
-          {/* Timer - gleich gross wie Ortsname */}
-          {timeLimitSeconds && !showResult && !isLocationPlayed && !timeExpired && (
-            <span className={cn(
-              "font-mono font-bold text-4xl tabular-nums mt-2",
-              timeRemaining !== null && timeRemaining <= 10 ? "text-error" : "text-text-primary"
-            )}>
-              {timeRemaining !== null ? timeRemaining.toFixed(1) : timeLimitSeconds.toFixed(1)}s
+        <div className={cn(
+          "absolute top-4 left-1/2 -translate-x-1/2 z-10",
+          "bg-background/85 backdrop-blur-md rounded-xl",
+          "flex items-center gap-3 px-4 py-2",
+          "border-2",
+          // Border color based on state
+          !showResult && !timeExpired && timerState === "normal" && "border-primary",
+          !showResult && !timeExpired && timerState === "warning" && "border-accent",
+          !showResult && !timeExpired && timerState === "critical" && "border-error",
+          timeExpired && !showResult && "border-error timer-expired",
+          showResult && lastResult && lastResult.distanceKm < 20 && "border-success",
+          showResult && lastResult && lastResult.distanceKm >= 20 && lastResult.distanceKm < 100 && "border-accent",
+          showResult && lastResult && lastResult.distanceKm >= 100 && "border-glass-border",
+          // Animations
+          !showResult && !timeExpired && timerState === "warning" && "animate-timer-warning",
+          !showResult && !timeExpired && timerState === "critical" && "animate-timer-critical"
+        )}>
+          {/* Ort */}
+          <div className="flex items-baseline gap-1">
+            <span className="text-[10px] text-text-muted uppercase tracking-widest">
+              {t("whereIs")}
             </span>
-          )}
-
-          {/* Ergebnis - gross */}
-          {showResult && lastResult && (
-            <span className={cn(
-              "font-bold text-4xl tabular-nums mt-2",
-              lastResult.distanceKm < 50 ? "text-success" :
-              lastResult.distanceKm < 150 ? "text-accent" : "text-text-primary"
-            )}>
-              {lastResult.distanceKm.toFixed(1)} km
+            <span className="text-lg font-bold text-text-primary text-glow-primary">
+              {currentRound.locationName}
             </span>
-          )}
-
-          {/* Timeout */}
-          {timeExpired && !showResult && (
-            <span className="font-bold text-3xl text-error mt-2">{t("timeUp")}</span>
-          )}
-
-          {/* Button - feste Breite */}
-          <div className="mt-4">
-            {!showResult && !timeExpired && (
-              <Button
-                variant="primary"
-                size="lg"
-                onClick={handleGuess}
-                disabled={!markerPosition}
-                isLoading={submitting}
-                className="w-80"
-              >
-                {submitting ? t("submitting") : (markerPosition ? t("submit") : t("placeMarker"))}
-              </Button>
-            )}
-
-            {timeExpired && !showResult && (
-              <Button variant="primary" size="lg" onClick={handleTimeoutSubmit} isLoading={submitting} className="w-80">
-                {t("next")}
-              </Button>
-            )}
-
-            {showResult && (
-              <Button
-                variant="primary"
-                size="lg"
-                onClick={() => {
-                  if (currentRoundIndex < releasedRounds.length - 1) {
-                    handleNextRound();
-                  } else if (allReleasedLocationsPlayed) {
-                    setShowRoundSummary(true);
-                  } else {
-                    router.push(`/${locale}/groups/${groupId}`);
-                  }
-                }}
-                className="w-80"
-              >
-                {currentRoundIndex < releasedRounds.length - 1
-                  ? t("next")
-                  : allReleasedLocationsPlayed
-                  ? t("result")
-                  : t("wait")}
-              </Button>
-            )}
           </div>
+
+          {/* Divider */}
+          <div className="w-px h-6 bg-glass-border" />
+
+          {/* Timer / Result / Timeout Display */}
+          <span className={cn(
+            "font-mono font-bold text-lg tabular-nums min-w-[50px] text-center",
+            // Timer colors
+            !showResult && !timeExpired && timerState === "normal" && "text-primary",
+            !showResult && !timeExpired && timerState === "warning" && "text-accent",
+            !showResult && !timeExpired && timerState === "critical" && "text-error",
+            // Timeout
+            timeExpired && !showResult && "text-error",
+            // Result colors
+            showResult && lastResult && lastResult.distanceKm < 20 && "text-success",
+            showResult && lastResult && lastResult.distanceKm >= 20 && lastResult.distanceKm < 100 && "text-accent",
+            showResult && lastResult && lastResult.distanceKm >= 100 && "text-text-primary"
+          )}>
+            {!showResult && !timeExpired && timeLimitSeconds && (
+              <>{timeRemaining !== null ? timeRemaining.toFixed(1) : timeLimitSeconds.toFixed(1)}s</>
+            )}
+            {!showResult && !timeExpired && !timeLimitSeconds && "—"}
+            {timeExpired && !showResult && t("timeUp")}
+            {showResult && lastResult && <>{lastResult.distanceKm.toFixed(1)} km</>}
+          </span>
+
+          {/* Divider */}
+          <div className="w-px h-6 bg-glass-border" />
+
+          {/* Action Button */}
+          <Button
+            variant={buttonConfig.variant}
+            size="sm"
+            onClick={buttonConfig.onClick}
+            disabled={buttonConfig.disabled}
+            isLoading={submitting}
+            className="whitespace-nowrap"
+          >
+            {submitting ? "..." : buttonConfig.text}
+          </Button>
         </div>
       )}
-
-      {/* Karte */}
-      <div className="flex-1">
-        <SwitzerlandMap
-          onMarkerPlace={showResult || timeExpired ? undefined : setMarkerPosition}
-          markerPosition={markerPosition}
-          targetPosition={
-            showResult && lastResult
-              ? { lat: lastResult.targetLat, lng: lastResult.targetLng }
-              : null
-          }
-          showTarget={showResult}
-          interactive={!showResult && !isLocationPlayed && !timeExpired}
-          height="100%"
-          hintCircle={!showResult && !isLocationPlayed ? hintCircle : null}
-        />
-      </div>
     </div>
   );
 }

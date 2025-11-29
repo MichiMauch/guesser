@@ -84,10 +84,10 @@ export default function SwitzerlandMap({
   if (!mounted) {
     return (
       <div
-        className="bg-gray-100 rounded-lg flex items-center justify-center"
+        className="bg-surface-1 rounded-lg flex items-center justify-center"
         style={{ height }}
       >
-        <span className="text-gray-500">Karte wird geladen...</span>
+        <span className="text-text-muted">Karte wird geladen...</span>
       </div>
     );
   }
@@ -97,11 +97,11 @@ export default function SwitzerlandMap({
     [SWITZERLAND_BOUNDS.northEast.lat, SWITZERLAND_BOUNDS.northEast.lng]
   );
 
-  // Style for Switzerland GeoJSON
+  // Style for Switzerland GeoJSON - Dark Gaming Theme
   const geoStyle = {
-    color: "#374151",      // Grenzlinie (gray-700)
+    color: "#00D9FF",      // Cyan border with glow effect
     weight: 2,
-    fillColor: "#ffffff",  // Inneres weiss
+    fillColor: "#2E3744",  // Dark surface fill
     fillOpacity: 1,
   };
 
@@ -109,7 +109,7 @@ export default function SwitzerlandMap({
     <MapContainer
       center={[SWITZERLAND_BOUNDS.center.lat, SWITZERLAND_BOUNDS.center.lng]}
       zoom={8}
-      style={{ height, width: "100%", backgroundColor: "#d1d5db" }}
+      style={{ height, width: "100%", backgroundColor: "#1A1F26" }}
       className="rounded-lg"
       maxBounds={bounds}
       maxBoundsViscosity={1.0}
@@ -126,11 +126,12 @@ export default function SwitzerlandMap({
           center={[hintCircle.lat, hintCircle.lng]}
           radius={hintCircle.radiusKm * 1000}
           pathOptions={{
-            color: "#3b82f6",
-            fillColor: "#93c5fd",
-            fillOpacity: 0.15,
+            color: "#00D9FF",
+            fillColor: "#00D9FF",
+            fillOpacity: 0.1,
             weight: 2,
-            dashArray: "5, 10",
+            dashArray: "8, 12",
+            interactive: false,
           }}
         />
       )}

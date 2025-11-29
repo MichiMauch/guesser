@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
-import Link from "next/link";
 import SwitzerlandMap from "@/components/Map";
 import ConfirmModal from "@/components/ConfirmModal";
 import toast from "react-hot-toast";
@@ -205,22 +204,11 @@ export default function AdminLocationsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 border-b border-glass-border bg-surface-1/80 backdrop-blur-xl">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center gap-4">
-          <Link
-            href={`/${locale}/admin`}
-            className="flex items-center gap-2 text-text-secondary hover:text-text-primary transition-colors"
-          >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            <span>Zurück</span>
-          </Link>
-          <h1 className="text-h3 text-primary">Orte verwalten</h1>
+      <main className="max-w-6xl mx-auto px-4 py-6">
+        {/* Page Title */}
+        <div className="flex items-center gap-3 mb-6">
+          <h1 className="text-h2 text-text-primary">Orte verwalten</h1>
         </div>
-      </header>
-
-      <main className="max-w-6xl mx-auto px-4 py-8">
         <div className="grid gap-8 lg:grid-cols-2">
           {/* Add new location */}
           <Card variant="surface" padding="lg">

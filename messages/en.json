@@ -1,4 +1,10 @@
 {
+  "header": {
+    "myGroups": "My Groups",
+    "train": "Train",
+    "logout": "Logout",
+    "login": "Login"
+  },
   "common": {
     "back": "Back",
     "loading": "Loading...",
@@ -59,7 +65,8 @@
     "timeLimit": "Time limit",
     "timeLimitSeconds": "{seconds} seconds",
     "noTimeLimit": "No limit",
-    "changeSettings": "Change settings"
+    "changeSettings": "Change settings",
+    "roundLocations": "Round {round} ({count} locations)"
   },
   "game": {
     "newGame": "New Game",
@@ -117,7 +124,8 @@
     "nextLocation": "Next location",
     "resetStats": "Reset statistics",
     "submit": "Submit guess",
-    "placeMarker": "Place a marker on the map"
+    "placeMarker": "Place a marker on the map",
+    "placeMarkerHint": "Tap on the map to place a marker"
   },
   "leaderboard": {
     "title": "Leaderboard",

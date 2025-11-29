@@ -12,7 +12,6 @@ import StartGameButton from "@/components/StartGameButton";
 import RoundControlPanel from "@/components/RoundControlPanel";
 import PlayButton from "@/components/PlayButton";
 import LeaveGroupButton from "@/components/LeaveGroupButton";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
@@ -107,31 +106,24 @@ export default async function GroupPage({
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-glass-border bg-surface-1/80 backdrop-blur-xl">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link
-              href={`/${locale}`}
-              className="flex items-center gap-2 text-text-secondary hover:text-text-primary transition-colors"
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              <span className="hidden sm:inline">{tCommon("back")}</span>
-            </Link>
-            <h1 className="text-h3 text-text-primary">{group.name}</h1>
-            {isAdmin && (
-              <Badge variant="primary" size="sm">
-                {tCommon("admin")}
-              </Badge>
-            )}
-          </div>
-          <LanguageSwitcher />
+      {/* Hero Section */}
+      <div className="bg-surface-1/50 border-b border-glass-border">
+        <div className="max-w-6xl mx-auto px-4 py-6 text-center">
+          <h2 className="text-h1 text-text-primary mb-1">{group.name}</h2>
+          {currentGame && (
+            <p className="text-body text-text-secondary">
+              {t("roundLocations", { round: currentGame.currentRound, count: group.locationsPerRound })}
+            </p>
+          )}
+          {isAdmin && (
+            <Badge variant="primary" size="sm" className="mt-2">
+              {tCommon("admin")}
+            </Badge>
+          )}
         </div>
-      </header>
+      </div>
 
-      <main className="max-w-6xl mx-auto px-4 py-8 space-y-8">
+      <main className="max-w-6xl mx-auto px-4 py-6 space-y-6">
         {currentGame?.status === "completed" ? (
           /* Completed Game View */
           <>
@@ -191,9 +183,8 @@ export default async function GroupPage({
         ) : (
           /* Active Game / No Game View */
           <>
-            {/* Action Cards */}
-            <div className="grid gap-4 sm:grid-cols-2">
-              {/* Play Card */}
+            {/* Play Card */}
+            <div className="max-w-md mx-auto">
               {currentGame && locationsCount >= group.locationsPerRound ? (
                 <PlayButton
                   groupId={groupId}
@@ -234,27 +225,6 @@ export default async function GroupPage({
                   </div>
                 </Card>
               )}
-
-              {/* Train Card */}
-              <Link href={`/${locale}/train/${groupId}`} className="group">
-                <Card variant="interactive" padding="lg" className="h-full">
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-xl bg-accent/20 flex items-center justify-center group-hover:bg-accent/30 transition-colors">
-                      <svg className="w-7 h-7 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className="text-h3 text-text-primary group-hover:text-accent transition-colors">
-                        {t("train")}
-                      </h3>
-                      <p className="text-body-small text-text-secondary">
-                        {t("trainDescription")}
-                      </p>
-                    </div>
-                  </div>
-                </Card>
-              </Link>
             </div>
 
             {/* Round Control Panel (Admin) */}

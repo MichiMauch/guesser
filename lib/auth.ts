@@ -4,12 +4,8 @@ import GoogleProvider from "next-auth/providers/google";
 import { db } from "./db";
 import { accounts, sessions, users, verificationTokens } from "./db/schema";
 
-// Super-Admin E-Mails
-const SUPER_ADMIN_EMAILS = ["michi.mauch@netnode.ch"];
-
-export function isSuperAdmin(email: string | null | undefined): boolean {
-  return email ? SUPER_ADMIN_EMAILS.includes(email) : false;
-}
+// Re-export für Rückwärtskompatibilität
+export { isSuperAdmin } from "./super-admin";
 
 export const authOptions: NextAuthOptions = {
   adapter: DrizzleAdapter(db, {

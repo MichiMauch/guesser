@@ -1,46 +1,51 @@
 @import "tailwindcss";
 
 /* ============================================
-   SWISS GUESSER - DARK MODE DESIGN SYSTEM
+   SWISS GUESSER - DARK MODE GAMING DESIGN
    ============================================ */
 
 :root {
-  /* Primary Colors - Indigo */
-  --primary: #4E5CFF;
-  --primary-light: #6B77FF;
-  --primary-dark: #3A47CC;
+  /* Primary Colors - Cyan/Türkis */
+  --primary: #00D9FF;
+  --primary-light: #5CE6FF;
+  --primary-dark: #00A8C6;
+  --primary-glow: rgba(0, 217, 255, 0.4);
 
-  /* Accent Colors - Gold (for scores) */
-  --accent: #D97706;
-  --accent-light: #F59E0B;
+  /* Accent Colors - Orange (for warnings/timer) */
+  --accent: #FF6B35;
+  --accent-light: #FF8F66;
+  --accent-glow: rgba(255, 107, 53, 0.5);
 
-  /* Semantic Colors */
-  --success: #10B981;
-  --error: #EF4444;
-  --warning: #F59E0B;
+  /* Semantic Colors - Neon */
+  --success: #00FF88;
+  --success-glow: rgba(0, 255, 136, 0.4);
+  --error: #FF3366;
+  --error-glow: rgba(255, 51, 102, 0.5);
+  --warning: #FF6B35;
 
-  /* Background & Surfaces (Light Mode) */
-  --background: #FFFFFF;
-  --surface-1: #F8F9FA;
-  --surface-2: #E9ECEF;
-  --surface-3: #DEE2E6;
+  /* Background & Surfaces (Dark Mode Gaming) */
+  --background: #0F1419;
+  --surface-1: #1A1F26;
+  --surface-2: #242B35;
+  --surface-3: #2E3744;
 
-  /* Glass Effects (Light Mode) */
-  --glass-bg: rgba(0, 0, 0, 0.02);
-  --glass-bg-elevated: rgba(0, 0, 0, 0.04);
-  --glass-border: rgba(0, 0, 0, 0.08);
-  --glass-border-elevated: rgba(0, 0, 0, 0.12);
+  /* Glass Effects (Dark Mode) */
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-bg-elevated: rgba(255, 255, 255, 0.06);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-elevated: rgba(255, 255, 255, 0.12);
 
-  /* Text Colors (Light Mode) */
-  --text-primary: #212529;
-  --text-secondary: #495057;
-  --text-muted: #6C757D;
+  /* Text Colors (Dark Mode) */
+  --text-primary: #FFFFFF;
+  --text-secondary: #8B9AAF;
+  --text-muted: #5A6577;
 
-  /* Shadows & Glows */
-  --glow-primary: 0 0 20px rgba(78, 92, 255, 0.15);
-  --glow-primary-lg: 0 0 40px rgba(78, 92, 255, 0.2);
-  --glow-accent: 0 0 30px rgba(255, 176, 58, 0.3);
-  --glow-success: 0 0 20px rgba(16, 185, 129, 0.2);
+  /* Shadows & Glows - Neon Style */
+  --glow-primary: 0 0 20px var(--primary-glow);
+  --glow-primary-lg: 0 0 40px var(--primary-glow);
+  --glow-accent: 0 0 30px var(--accent-glow);
+  --glow-success: 0 0 20px var(--success-glow);
+  --glow-error: 0 0 20px var(--error-glow);
 
   /* Focus Ring */
   --focus-ring: 0 0 0 2px var(--background), 0 0 0 4px var(--primary);
@@ -109,7 +114,7 @@
 
 /* Base Styles */
 html {
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 body {
@@ -324,19 +329,113 @@ body {
   animation: shake 300ms ease-in-out;
 }
 
-/* Timer Warning Pulse */
-@keyframes timer-pulse {
+/* Timer Animations - Gaming Style */
+
+/* Normal: Cyan Glow Pulse */
+@keyframes timer-glow {
   0%, 100% {
-    transform: scale(1);
-    color: var(--error);
+    box-shadow: 0 0 20px var(--primary-glow), inset 0 0 20px rgba(0, 217, 255, 0.1);
   }
   50% {
-    transform: scale(1.05);
+    box-shadow: 0 0 35px var(--primary-glow), inset 0 0 25px rgba(0, 217, 255, 0.15);
+  }
+}
+
+.animate-timer-normal {
+  animation: timer-glow 2s ease-in-out infinite;
+}
+
+/* Warning (<=10s): Orange Pulse with Scale */
+@keyframes timer-warning-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px var(--accent-glow), inset 0 0 15px rgba(255, 107, 53, 0.1);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 45px var(--accent-glow), inset 0 0 25px rgba(255, 107, 53, 0.2);
+    transform: scale(1.02);
   }
 }
 
 .animate-timer-warning {
-  animation: timer-pulse 1s ease-in-out infinite;
+  animation: timer-warning-pulse 0.8s ease-in-out infinite;
+}
+
+/* Critical (<=5s): Red Shake + Pulse */
+@keyframes timer-critical {
+  0%, 100% {
+    transform: translateX(0) scale(1);
+    box-shadow: 0 0 25px var(--error-glow), inset 0 0 20px rgba(255, 51, 102, 0.15);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-3px) scale(1.01);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(3px) scale(1.01);
+    box-shadow: 0 0 50px var(--error-glow), inset 0 0 30px rgba(255, 51, 102, 0.25);
+  }
+}
+
+.animate-timer-critical {
+  animation: timer-critical 0.5s ease-in-out infinite;
+}
+
+/* Expired: Static red glow, NO animation/shake */
+.timer-expired {
+  box-shadow: 0 0 30px var(--error-glow), inset 0 0 20px rgba(255, 51, 102, 0.15);
+  border-color: var(--error) !important;
+}
+
+/* Text Glow Effects */
+.text-glow-primary {
+  text-shadow: 0 0 20px var(--primary-glow), 0 0 40px var(--primary-glow);
+}
+
+.text-glow-success {
+  text-shadow: 0 0 20px var(--success-glow), 0 0 40px var(--success-glow);
+}
+
+.text-glow-error {
+  text-shadow: 0 0 20px var(--error-glow), 0 0 40px var(--error-glow);
+}
+
+.text-glow-accent {
+  text-shadow: 0 0 20px var(--accent-glow), 0 0 40px var(--accent-glow);
+}
+
+/* Score Burst Animation */
+@keyframes score-burst {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-score-burst {
+  animation: score-burst 0.4s var(--ease-bounce) forwards;
+}
+
+/* Timer Box Styles */
+.timer-box {
+  background: linear-gradient(135deg, var(--surface-1) 0%, var(--surface-2) 100%);
+  border: 2px solid var(--primary);
+  border-radius: var(--radius-xl);
+  padding: 1rem 2rem;
+}
+
+.timer-box-warning {
+  border-color: var(--accent);
+}
+
+.timer-box-critical {
+  border-color: var(--error);
 }
 
 /* Draw Line (for distance line on map) */

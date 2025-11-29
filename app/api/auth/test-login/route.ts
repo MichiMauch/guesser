@@ -43,7 +43,7 @@ export async function POST(request: Request) {
         email: testUserEmail,
         image: null,
       });
-      user = { id: testUserId, name: testUserName, email: testUserEmail, emailVerified: null, image: null };
+      user = { id: testUserId, name: testUserName, email: testUserEmail, emailVerified: null, image: null, hintEnabled: null };
     }
 
     // Create a session

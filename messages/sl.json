@@ -1,4 +1,10 @@
 {
+  "header": {
+    "myGroups": "Moje skupine",
+    "train": "Treniraj",
+    "logout": "Odjava",
+    "login": "Prijava"
+  },
   "common": {
     "back": "Nazaj",
     "loading": "Nalaganje...",
@@ -59,7 +65,8 @@
     "timeLimit": "Časovna omejitev",
     "timeLimitSeconds": "{seconds} sekund",
     "noTimeLimit": "Brez omejitve",
-    "changeSettings": "Spremeni nastavitve"
+    "changeSettings": "Spremeni nastavitve",
+    "roundLocations": "Krog {round} ({count} lokacij)"
   },
   "game": {
     "newGame": "Nova igra",
@@ -117,7 +124,8 @@
     "nextLocation": "Naslednja lokacija",
     "resetStats": "Ponastavi statistiko",
     "submit": "Oddaj ugibanje",
-    "placeMarker": "Postavi oznako na zemljevid"
+    "placeMarker": "Postavi oznako na zemljevid",
+    "placeMarkerHint": "Tapni na zemljevid, da postaviš oznako"
   },
   "leaderboard": {
     "title": "Lestvica",

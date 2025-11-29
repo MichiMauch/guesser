@@ -1,15 +1,14 @@
 import { getServerSession } from "next-auth";
-import { authOptions, isSuperAdmin } from "@/lib/auth";
+import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { db } from "@/lib/db";
 import { groups, groupMembers } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { getTranslations } from "next-intl/server";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 
 async function getUserGroups(userId: string) {
@@ -39,55 +38,24 @@ export default async function Home({
   }
 
   const t = await getTranslations("home");
-  const tCommon = await getTranslations("common");
   const userGroups = await getUserGroups(session.user.id);
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-glass-border bg-surface-1/80 backdrop-blur-xl">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          {/* Logo */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-600 to-red-700 flex items-center justify-center shadow-lg shadow-red-600/20">
-              <svg
-                viewBox="0 0 32 32"
-                className="w-6 h-6"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path d="M13 8h6v6h6v6h-6v6h-6v-6H7v-6h6V8z" fill="white" />
-              </svg>
-            </div>
-            <h1 className="text-h3 text-text-primary hidden sm:block">{t("title")}</h1>
-          </div>
-
-          {/* Right Side */}
-          <div className="flex items-center gap-3">
-            <LanguageSwitcher />
-            {isSuperAdmin(session.user.email) && (
-              <Link href={`/${locale}/admin`}>
-                <Button variant="ghost" size="sm">
-                  {tCommon("admin")}
-                </Button>
-              </Link>
-            )}
-            <div className="flex items-center gap-2">
-              <span className="text-body-small text-text-secondary hidden sm:block">
-                {session.user.name}
-              </span>
-              <Avatar
-                src={session.user.image}
-                name={session.user.name}
-                size="md"
-              />
-            </div>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Background Switzerland Image */}
+      <div className="absolute inset-0 pointer-events-none opacity-[0.05]">
+        <Image
+          src="/schweiz.webp"
+          alt=""
+          fill
+          className="object-cover"
+          aria-hidden="true"
+          priority
+        />
+      </div>
 
       {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-4 py-8">
+      <main className="relative z-10 max-w-6xl mx-auto px-4 py-8">
         {/* Groups Section */}
         <section className="mb-12">
           <div className="flex items-center justify-between mb-6">
