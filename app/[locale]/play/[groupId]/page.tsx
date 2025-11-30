@@ -3,7 +3,8 @@
 import { useState, useEffect, use, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
-import SwitzerlandMap, { SummaryMap } from "@/components/Map";
+import { CountryMap, SummaryMap } from "@/components/Map";
+import { getTimeoutPenalty, DEFAULT_COUNTRY } from "@/lib/countries";
 import toast from "react-hot-toast";
 import { generateHintCircleCenter, HINT_CIRCLE_RADIUS_KM } from "@/lib/hint";
 import { useTranslations } from "next-intl";
@@ -22,6 +23,7 @@ interface GameRound {
   locationName: string;
   latitude: number;
   longitude: number;
+  country: string;
 }
 
 interface Guess {
@@ -36,6 +38,7 @@ interface Game {
   id: string;
   status: string;
   currentRound: number;
+  country: string;
 }
 
 export default function PlayPage({
@@ -247,11 +250,12 @@ export default function PlayPage({
       });
 
       if (response.ok) {
+        const timeoutPenalty = getTimeoutPenalty(currentRound?.country ?? game?.country ?? DEFAULT_COUNTRY);
         const newGuesses = [
           ...userGuesses,
           {
             gameRoundId: currentRound.id,
-            distanceKm: 400,
+            distanceKm: timeoutPenalty,
             roundNumber: currentRound.roundNumber,
             latitude: null,
             longitude: null,
@@ -389,11 +393,14 @@ export default function PlayPage({
       };
     });
 
+    // Get country from the first location in this round (all locations in a round have the same country)
+    const roundCountry = currentRoundLocations[0]?.country ?? game?.country ?? DEFAULT_COUNTRY;
+
     return (
       <main className="max-w-2xl mx-auto px-4 py-4 space-y-4">
           {/* Summary Map */}
           <Card variant="elevated" padding="md">
-            <SummaryMap markers={summaryMarkers} height="300px" />
+            <SummaryMap markers={summaryMarkers} height="300px" country={roundCountry} />
           </Card>
 
           {/* Results Card */}
@@ -539,7 +546,8 @@ export default function PlayPage({
   return (
     <div className="h-[calc(100dvh-52px)] max-w-[1440px] mx-auto relative">
       {/* Fullscreen Map */}
-      <SwitzerlandMap
+      <CountryMap
+        country={currentRound?.country ?? game?.country ?? DEFAULT_COUNTRY}
         onMarkerPlace={showResult || timeExpired ? undefined : setMarkerPosition}
         markerPosition={markerPosition}
         targetPosition={

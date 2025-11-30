@@ -135,6 +135,8 @@ export default async function GroupPage({
             isAdmin={isAdmin}
             userCompletedRounds={userCompletedRounds}
             gameStatus={currentGame.status}
+            gameCountry={currentGame.country}
+            gameName={currentGame.name ?? undefined}
           />
         )}
 

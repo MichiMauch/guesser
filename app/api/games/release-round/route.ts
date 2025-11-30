@@ -5,6 +5,7 @@ import { games, groupMembers, locations, gameRounds } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { nanoid } from "nanoid";
+import { getLocationCountryName } from "@/lib/countries";
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
@@ -15,7 +16,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { gameId } = body;
+    const { gameId, country: requestedCountry } = body;
 
     if (!gameId) {
       return NextResponse.json(
@@ -54,8 +55,15 @@ export async function POST(request: Request) {
       );
     }
 
-    // Get all locations (global)
-    const allLocations = await db.select().from(locations);
+    // Use requested country or fall back to game's default country
+    const roundCountry = requestedCountry || game.country;
+
+    // Get locations for the round's country
+    const countryName = getLocationCountryName(roundCountry);
+    const allLocations = await db
+      .select()
+      .from(locations)
+      .where(eq(locations.country, countryName));
 
     // Get locations already used in this game
     const usedRounds = await db
@@ -94,6 +102,7 @@ export async function POST(request: Request) {
       roundNumber: newRoundNumber,
       locationIndex: i + 1,
       locationId: loc.id,
+      country: roundCountry,
     }));
 
     // Batch insert all locations for the round

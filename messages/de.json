@@ -16,8 +16,8 @@
     "admin": "Admin"
   },
   "home": {
-    "title": "Swiss Guesser",
-    "subtitle": "Teste dein Wissen über die Schweizer Geografie",
+    "title": "Guesser",
+    "subtitle": "Teste dein geografisches Wissen",
     "yourGroups": "Deine Gruppen",
     "createGroup": "Neue Gruppe erstellen",
     "joinGroup": "Gruppe beitreten",
@@ -28,12 +28,12 @@
     "locationsPerRound": "{count} Orte pro Runde"
   },
   "login": {
-    "title": "Swiss Guesser",
-    "subtitle": "Teste dein Wissen über die Schweizer Geografie",
+    "title": "Guesser",
+    "subtitle": "Teste dein geografisches Wissen",
     "googleLogin": "Mit Google anmelden",
     "testUsers": "Test-Benutzer (nur Entwicklung)",
     "loginFailed": "Login fehlgeschlagen",
-    "footer": "Spiele mit Freunden und finde heraus, wer die Schweiz am besten kennt!"
+    "footer": "Spiele mit Freunden und finde heraus, wer die Geografie am besten kennt!"
   },
   "join": {
     "title": "Gruppe beitreten",
@@ -92,7 +92,9 @@
     "unknownError": "Unbekannter Fehler",
     "enterGameName": "Gib dem Spiel einen Namen",
     "gameNamePlaceholder": "z.B. Weihnachtsspiel 2024",
-    "nameRequired": "Bitte gib einen Namen für das Spiel ein"
+    "nameRequired": "Bitte gib einen Namen für das Spiel ein",
+    "selectCountry": "Land auswählen",
+    "selectRoundCountry": "Land"
   },
   "play": {
     "playing": "Spielen",
@@ -108,7 +110,7 @@
     "result": "Ergebnis",
     "wait": "Warten",
     "timeUp": "Zeit abgelaufen!",
-    "penalty": "400 km Strafe",
+    "penalty": "{penalty} km Strafe",
     "submit": "Tipp abgeben",
     "submitting": "Wird gesendet...",
     "placeMarker": "Setze einen Marker auf der Karte",
@@ -224,5 +226,9 @@
     "week": "KW {week}/{year}",
     "completed": "Abgeschlossen",
     "active": "Aktiv"
+  },
+  "celebration": {
+    "winner": "Gewinner",
+    "redirecting": "Weiterleitung zur Gruppe..."
   }
 }

@@ -98,6 +98,7 @@ export const games = sqliteTable("games", {
     .notNull()
     .references(() => groups.id, { onDelete: "cascade" }),
   name: text("name"), // Game name (optional, set by admin)
+  country: text("country").notNull().default("switzerland"), // Country key (switzerland, slovenia)
   locationsPerRound: integer("locationsPerRound").notNull().default(5), // How many locations per round for this game
   timeLimitSeconds: integer("timeLimitSeconds"), // null = no limit
   weekNumber: integer("weekNumber"), // Legacy: ISO week (optional for backwards compatibility)
@@ -119,6 +120,7 @@ export const gameRounds = sqliteTable("gameRounds", {
   locationId: text("locationId")
     .notNull()
     .references(() => locations.id, { onDelete: "cascade" }),
+  country: text("country").notNull().default("switzerland"), // Country key for this round (can differ from game.country)
 });
 
 // Player Guesses

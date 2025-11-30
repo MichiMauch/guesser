@@ -16,8 +16,8 @@
     "admin": "Admin"
   },
   "home": {
-    "title": "Swiss Guesser",
-    "subtitle": "Test your knowledge of Swiss geography",
+    "title": "Guesser",
+    "subtitle": "Test your geographic knowledge",
     "yourGroups": "Your Groups",
     "createGroup": "Create New Group",
     "joinGroup": "Join Group",
@@ -28,12 +28,12 @@
     "locationsPerRound": "{count} locations per round"
   },
   "login": {
-    "title": "Swiss Guesser",
-    "subtitle": "Test your knowledge of Swiss geography",
+    "title": "Guesser",
+    "subtitle": "Test your geographic knowledge",
     "googleLogin": "Sign in with Google",
     "testUsers": "Test Users (development only)",
     "loginFailed": "Login failed",
-    "footer": "Play with friends and find out who knows Switzerland best!"
+    "footer": "Play with friends and find out who knows geography best!"
   },
   "join": {
     "title": "Join Group",
@@ -92,7 +92,9 @@
     "unknownError": "Unknown error",
     "enterGameName": "Give the game a name",
     "gameNamePlaceholder": "e.g. Christmas Game 2024",
-    "nameRequired": "Please enter a name for the game"
+    "nameRequired": "Please enter a name for the game",
+    "selectCountry": "Select Country",
+    "selectRoundCountry": "Country"
   },
   "play": {
     "playing": "Play",
@@ -108,7 +110,7 @@
     "result": "Result",
     "wait": "Wait",
     "timeUp": "Time's up!",
-    "penalty": "400 km penalty",
+    "penalty": "{penalty} km penalty",
     "submit": "Submit guess",
     "submitting": "Submitting...",
     "placeMarker": "Place a marker on the map",
@@ -224,5 +226,9 @@
     "week": "Week {week}/{year}",
     "completed": "Completed",
     "active": "Active"
+  },
+  "celebration": {
+    "winner": "Winner",
+    "redirecting": "Redirecting to group..."
   }
 }

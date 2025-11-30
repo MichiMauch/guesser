@@ -12,6 +12,7 @@ import { eq, and } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { NextResponse } from "next/server";
 import { calculateDistance } from "@/lib/distance";
+import { getTimeoutPenalty } from "@/lib/countries";
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
@@ -77,6 +78,7 @@ export async function POST(request: Request) {
         roundNumber: gameRounds.roundNumber,
         groupId: games.groupId,
         currentRound: games.currentRound,
+        country: games.country,
       })
       .from(gameRounds)
       .innerJoin(games, eq(gameRounds.gameId, games.id))
@@ -144,10 +146,10 @@ export async function POST(request: Request) {
       );
     }
 
-    // Calculate distance (400km penalty for timeout)
+    // Calculate distance (country-specific penalty for timeout)
     let distanceKm: number;
     if (timeout) {
-      distanceKm = 400;
+      distanceKm = getTimeoutPenalty(round.country);
     } else {
       distanceKm = calculateDistance(
         latitude,

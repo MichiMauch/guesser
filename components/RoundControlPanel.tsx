@@ -3,8 +3,16 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Button } from "@/components/ui/Button";
+import { getCountryKeys, getCountryName } from "@/lib/countries";
+import WinnerCelebration from "@/components/WinnerCelebration";
+
+interface Winner {
+  userName: string;
+  userImage: string | null;
+  totalDistance: number;
+}
 
 interface RoundControlPanelProps {
   gameId: string;
@@ -14,6 +22,8 @@ interface RoundControlPanelProps {
   isAdmin: boolean;
   userCompletedRounds?: number;
   gameStatus: "active" | "completed";
+  gameCountry: string;
+  gameName?: string;
 }
 
 export default function RoundControlPanel({
@@ -22,13 +32,20 @@ export default function RoundControlPanel({
   currentRound,
   isAdmin,
   gameStatus,
+  gameCountry,
+  gameName,
 }: RoundControlPanelProps) {
   const router = useRouter();
+  const locale = useLocale();
   const [loading, setLoading] = useState(false);
   const [completing, setCompleting] = useState(false);
   const [error, setError] = useState("");
+  const [selectedCountry, setSelectedCountry] = useState(gameCountry);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [winner, setWinner] = useState<Winner | null>(null);
   const t = useTranslations("game");
   const tCommon = useTranslations("common");
+  const countryOptions = getCountryKeys();
 
   const handleReleaseRound = async () => {
     setLoading(true);
@@ -38,7 +55,7 @@ export default function RoundControlPanel({
       const response = await fetch("/api/games/release-round", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ gameId }),
+        body: JSON.stringify({ gameId, country: selectedCountry }),
       });
 
       const data = await response.json();
@@ -53,6 +70,26 @@ export default function RoundControlPanel({
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchWinner = async () => {
+    try {
+      const res = await fetch(`/api/leaderboard?groupId=${groupId}&gameId=${gameId}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.leaderboard && data.leaderboard.length > 0) {
+          const firstPlace = data.leaderboard[0];
+          return {
+            userName: firstPlace.userName,
+            userImage: firstPlace.userImage,
+            totalDistance: firstPlace.totalDistance,
+          };
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch winner:", error);
+    }
+    return null;
   };
 
   const completeGame = async () => {
@@ -72,8 +109,16 @@ export default function RoundControlPanel({
         throw new Error(data.error || t("errorCompleting"));
       }
 
-      toast.success(t("gameCompleted"));
-      router.refresh();
+      // Fetch winner and show celebration
+      const winnerData = await fetchWinner();
+      if (winnerData) {
+        setWinner(winnerData);
+        setShowCelebration(true);
+      } else {
+        // No winner data, just show success and refresh
+        toast.success(t("gameCompleted"));
+        router.refresh();
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : t("unknownError"));
     } finally {
@@ -112,6 +157,21 @@ export default function RoundControlPanel({
     );
   };
 
+  // Show celebration overlay
+  if (showCelebration && winner) {
+    return (
+      <WinnerCelebration
+        winner={winner}
+        groupId={groupId}
+        gameName={gameName}
+        onClose={() => {
+          setShowCelebration(false);
+          router.refresh();
+        }}
+      />
+    );
+  }
+
   // Don't render if not admin
   if (!isAdmin) {
     return null;
@@ -119,30 +179,51 @@ export default function RoundControlPanel({
 
   return (
     <div className="max-w-md mx-auto">
-      {/* Admin controls - compact horizontal layout */}
+      {/* Admin controls */}
       {gameStatus === "active" && (
-        <div className="flex gap-2 justify-center">
+        <div className="space-y-3">
           {error && (
-            <p className="text-error text-body-small mb-2 w-full text-center">{error}</p>
+            <p className="text-error text-body-small text-center">{error}</p>
           )}
-          <Button
-            variant="success"
-            size="sm"
-            onClick={handleReleaseRound}
-            disabled={loading || completing}
-            isLoading={loading}
-          >
-            {loading ? t("releasing") : t("releaseRound", { number: currentRound + 1 })}
-          </Button>
-          <Button
-            variant="danger"
-            size="sm"
-            onClick={handleCompleteGame}
-            disabled={loading || completing}
-            isLoading={completing}
-          >
-            {completing ? t("completing") : t("completeGame")}
-          </Button>
+          {/* Country selector */}
+          <div className="flex items-center justify-center gap-2">
+            <label htmlFor="country-select" className="text-body-small text-text-secondary">
+              {t("selectRoundCountry")}:
+            </label>
+            <select
+              id="country-select"
+              value={selectedCountry}
+              onChange={(e) => setSelectedCountry(e.target.value)}
+              className="bg-surface-2 border border-glass-border rounded-lg px-3 py-1.5 text-body-small text-text-primary focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              {countryOptions.map((countryKey) => (
+                <option key={countryKey} value={countryKey}>
+                  {getCountryName(countryKey, locale)}
+                </option>
+              ))}
+            </select>
+          </div>
+          {/* Action buttons */}
+          <div className="flex gap-2 justify-center">
+            <Button
+              variant="success"
+              size="sm"
+              onClick={handleReleaseRound}
+              disabled={loading || completing}
+              isLoading={loading}
+            >
+              {loading ? t("releasing") : t("releaseRound", { number: currentRound + 1 })}
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={handleCompleteGame}
+              disabled={loading || completing}
+              isLoading={completing}
+            >
+              {completing ? t("completing") : t("completeGame")}
+            </Button>
+          </div>
         </div>
       )}
 

@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useTranslations } from "next-intl";
 import PlayButton from "@/components/PlayButton";
 import StartGameButton from "@/components/StartGameButton";
+import WinnerCelebration from "@/components/WinnerCelebration";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 
@@ -13,6 +14,12 @@ interface GameStatus {
   userCompletedRounds: number;
   gameName: string | null;
   locationsPerRound: number;
+}
+
+interface Winner {
+  userName: string;
+  userImage: string | null;
+  totalDistance: number;
 }
 
 interface GameStatusPollerProps {
@@ -29,20 +36,64 @@ export default function GameStatusPoller({
   isAdmin,
 }: GameStatusPollerProps) {
   const [gameStatus, setGameStatus] = useState<GameStatus | null>(initialGameStatus);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [winner, setWinner] = useState<Winner | null>(null);
+  const [completedGameName, setCompletedGameName] = useState<string | null>(null);
+  const previousGameIdRef = useRef<string | null>(initialGameStatus?.gameId ?? null);
+  const previousGameNameRef = useRef<string | null>(initialGameStatus?.gameName ?? null);
   const t = useTranslations("group");
   const tCommon = useTranslations("common");
+
+  const fetchWinner = useCallback(async (gameId: string) => {
+    try {
+      const res = await fetch(`/api/leaderboard?groupId=${groupId}&gameId=${gameId}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.leaderboard && data.leaderboard.length > 0) {
+          const firstPlace = data.leaderboard[0];
+          setWinner({
+            userName: firstPlace.userName,
+            userImage: firstPlace.userImage,
+            totalDistance: firstPlace.totalDistance,
+          });
+          return true;
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch winner:", error);
+    }
+    return false;
+  }, [groupId]);
 
   const fetchGameStatus = useCallback(async () => {
     try {
       const res = await fetch(`/api/games/status?groupId=${groupId}`);
       if (res.ok) {
         const data = await res.json();
+
+        // Detect game completion: gameId went from value to null
+        const previousGameId = previousGameIdRef.current;
+        const currentGameId = data.gameId;
+
+        if (previousGameId && !currentGameId && !showCelebration) {
+          // Game was just completed! Fetch winner and show celebration
+          const hasWinner = await fetchWinner(previousGameId);
+          if (hasWinner) {
+            setCompletedGameName(previousGameNameRef.current);
+            setShowCelebration(true);
+          }
+        }
+
+        // Update refs for next comparison
+        previousGameIdRef.current = currentGameId;
+        previousGameNameRef.current = data.gameName;
+
         setGameStatus(data);
       }
     } catch (error) {
       console.error("Failed to fetch game status:", error);
     }
-  }, [groupId]);
+  }, [groupId, fetchWinner, showCelebration]);
 
   useEffect(() => {
     // Poll every 3 seconds
@@ -50,6 +101,18 @@ export default function GameStatusPoller({
 
     return () => clearInterval(interval);
   }, [fetchGameStatus]);
+
+  // Celebration overlay
+  if (showCelebration && winner) {
+    return (
+      <WinnerCelebration
+        winner={winner}
+        groupId={groupId}
+        gameName={completedGameName ?? undefined}
+        onClose={() => setShowCelebration(false)}
+      />
+    );
+  }
 
   // No active game
   if (!gameStatus?.gameId) {

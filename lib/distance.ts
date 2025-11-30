@@ -1,3 +1,5 @@
+import { getCountryBounds, DEFAULT_COUNTRY, type CountryBounds } from "./countries";
+
 // Haversine formula to calculate distance between two coordinates
 // Returns distance in kilometers (rounded to 1 decimal place)
 export function calculateDistance(
@@ -19,9 +21,10 @@ export function calculateDistance(
   return Math.round(R * c * 10) / 10; // Round to 1 decimal place
 }
 
-// Switzerland bounds
-export const SWITZERLAND_BOUNDS = {
-  southWest: { lat: 45.8, lng: 5.9 },
-  northEast: { lat: 47.8, lng: 10.5 },
-  center: { lat: 46.8, lng: 8.2 },
-};
+// Legacy export for backwards compatibility
+export const SWITZERLAND_BOUNDS = getCountryBounds(DEFAULT_COUNTRY);
+
+// Get bounds for any country
+export function getBoundsForCountry(country: string): CountryBounds {
+  return getCountryBounds(country);
+}

@@ -605,3 +605,41 @@ body {
 .safe-area-top {
   padding-top: env(safe-area-inset-top, 16px);
 }
+
+/* ============================================
+   WINNER CELEBRATION ANIMATIONS
+   ============================================ */
+
+/* Winner Entrance - Tilted dramatic entry */
+@keyframes winner-entrance {
+  0% {
+    opacity: 0;
+    transform: rotate(-15deg) scale(0.3) translateY(100px);
+  }
+  60% {
+    transform: rotate(-3deg) scale(1.1) translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(-5deg) scale(1) translateY(0);
+  }
+}
+
+.winner-entrance {
+  animation: winner-entrance 0.8s var(--ease-bounce) forwards;
+  transform: rotate(-5deg);
+}
+
+/* Winner Card Glow */
+.winner-card {
+  animation: winner-glow 2s ease-in-out infinite;
+}
+
+@keyframes winner-glow {
+  0%, 100% {
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.3), 0 0 60px rgba(255, 215, 0, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 50px rgba(255, 215, 0, 0.5), 0 0 80px rgba(255, 215, 0, 0.2);
+  }
+}

@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { MapContainer, Marker, Popup, GeoJSON, Polyline } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { SWITZERLAND_BOUNDS } from "@/lib/distance";
+import { getBoundsForCountry } from "@/lib/distance";
+import { getCountryConfig, DEFAULT_COUNTRY } from "@/lib/countries";
 
 // Blue marker for user guesses
 const guessIcon = L.icon({
@@ -34,6 +35,7 @@ interface MarkerPair {
 }
 
 interface SummaryMapProps {
+  country?: string;
   markers: MarkerPair[];
   height?: string;
 }
@@ -45,17 +47,20 @@ function getLineColor(distanceKm: number): string {
   return "#EF4444"; // red (error)
 }
 
-export default function SummaryMap({ markers, height = "300px" }: SummaryMapProps) {
+export default function SummaryMap({ country = DEFAULT_COUNTRY, markers, height = "300px" }: SummaryMapProps) {
   const [mounted, setMounted] = useState(false);
   const [geoData, setGeoData] = useState<GeoJSON.FeatureCollection | null>(null);
 
+  const countryConfig = getCountryConfig(country);
+  const countryBounds = getBoundsForCountry(country);
+
   useEffect(() => {
     setMounted(true);
-    fetch("/switzerland.geojson")
+    fetch(countryConfig.geoJsonFile)
       .then((res) => res.json())
       .then((data) => setGeoData(data))
       .catch((err) => console.error("Error loading GeoJSON:", err));
-  }, []);
+  }, [countryConfig.geoJsonFile]);
 
   if (!mounted) {
     return (
@@ -69,8 +74,8 @@ export default function SummaryMap({ markers, height = "300px" }: SummaryMapProp
   }
 
   const bounds = L.latLngBounds(
-    [SWITZERLAND_BOUNDS.southWest.lat, SWITZERLAND_BOUNDS.southWest.lng],
-    [SWITZERLAND_BOUNDS.northEast.lat, SWITZERLAND_BOUNDS.northEast.lng]
+    [countryBounds.southWest.lat, countryBounds.southWest.lng],
+    [countryBounds.northEast.lat, countryBounds.northEast.lng]
   );
 
   const geoStyle = {
@@ -82,7 +87,7 @@ export default function SummaryMap({ markers, height = "300px" }: SummaryMapProp
 
   return (
     <MapContainer
-      center={[SWITZERLAND_BOUNDS.center.lat, SWITZERLAND_BOUNDS.center.lng]}
+      center={[countryBounds.center.lat, countryBounds.center.lng]}
       zoom={7}
       style={{ height, width: "100%", backgroundColor: "#1A1F26" }}
       className="rounded-lg"

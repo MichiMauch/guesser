@@ -16,8 +16,8 @@
     "admin": "Admin"
   },
   "home": {
-    "title": "Swiss Guesser",
-    "subtitle": "Preizkusi svoje znanje švicarske geografije",
+    "title": "Guesser",
+    "subtitle": "Preizkusi svoje geografsko znanje",
     "yourGroups": "Tvoje skupine",
     "createGroup": "Ustvari novo skupino",
     "joinGroup": "Pridruži se skupini",
@@ -28,12 +28,12 @@
     "locationsPerRound": "{count} lokacij na krog"
   },
   "login": {
-    "title": "Swiss Guesser",
-    "subtitle": "Preizkusi svoje znanje švicarske geografije",
+    "title": "Guesser",
+    "subtitle": "Preizkusi svoje geografsko znanje",
     "googleLogin": "Prijava z Google",
     "testUsers": "Testni uporabniki (samo za razvoj)",
     "loginFailed": "Prijava ni uspela",
-    "footer": "Igraj s prijatelji in ugotovi, kdo najbolje pozna Švico!"
+    "footer": "Igraj s prijatelji in ugotovi, kdo najbolje pozna geografijo!"
   },
   "join": {
     "title": "Pridruži se skupini",
@@ -92,7 +92,9 @@
     "unknownError": "Neznana napaka",
     "enterGameName": "Daj igri ime",
     "gameNamePlaceholder": "npr. Božična igra 2024",
-    "nameRequired": "Prosim vnesi ime za igro"
+    "nameRequired": "Prosim vnesi ime za igro",
+    "selectCountry": "Izberi državo",
+    "selectRoundCountry": "Država"
   },
   "play": {
     "playing": "Igraj",
@@ -108,7 +110,7 @@
     "result": "Rezultat",
     "wait": "Počakaj",
     "timeUp": "Čas je potekel!",
-    "penalty": "400 km kazni",
+    "penalty": "{penalty} km kazni",
     "submit": "Oddaj ugibanje",
     "submitting": "Pošiljanje...",
     "placeMarker": "Postavi oznako na zemljevid",
@@ -224,5 +226,9 @@
     "week": "Teden {week}/{year}",
     "completed": "Končano",
     "active": "Aktivno"
+  },
+  "celebration": {
+    "winner": "Zmagovalec",
+    "redirecting": "Preusmeritev na skupino..."
   }
 }

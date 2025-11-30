@@ -11,6 +11,7 @@ import {
 import { eq, and, desc } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { NextResponse } from "next/server";
+import { DEFAULT_COUNTRY, getCountryKeys } from "@/lib/countries";
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
@@ -80,6 +81,7 @@ export async function GET(request: Request) {
         locationName: locations.name,
         latitude: locations.latitude,
         longitude: locations.longitude,
+        country: gameRounds.country,
       })
       .from(gameRounds)
       .innerJoin(locations, eq(gameRounds.locationId, locations.id))
@@ -110,7 +112,11 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { groupId, name, locationsPerRound, timeLimitSeconds } = body;
+    const { groupId, name, locationsPerRound, timeLimitSeconds, country } = body;
+
+    // Validate country
+    const validCountries = getCountryKeys();
+    const selectedCountry = country && validCountries.includes(country) ? country : DEFAULT_COUNTRY;
 
     // Check if user is admin
     const membership = await db
@@ -177,6 +183,7 @@ export async function POST(request: Request) {
       id: gameId,
       groupId,
       name: name || null,
+      country: selectedCountry,
       locationsPerRound,
       timeLimitSeconds: timeLimitSeconds || null,
       status: "active",

@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
+import { COUNTRIES, DEFAULT_COUNTRY, getCountryName } from "@/lib/countries";
 
 interface StartGameButtonProps {
   groupId: string;
@@ -13,14 +14,17 @@ interface StartGameButtonProps {
 
 export default function StartGameButton({ groupId }: StartGameButtonProps) {
   const router = useRouter();
+  const locale = useLocale();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [gameName, setGameName] = useState("");
+  const [selectedCountry, setSelectedCountry] = useState(DEFAULT_COUNTRY);
   const [locationsPerRound, setLocationsPerRound] = useState(5);
   const [timeLimitSeconds, setTimeLimitSeconds] = useState<number | null>(null);
   const t = useTranslations("game");
   const tNewGroup = useTranslations("newGroup");
 
+  const countryOptions = Object.keys(COUNTRIES);
   const locationOptions = [3, 5, 10];
   const timeLimitOptions = [
     { value: null, label: tNewGroup("noLimit") },
@@ -47,6 +51,7 @@ export default function StartGameButton({ groupId }: StartGameButtonProps) {
         body: JSON.stringify({
           groupId,
           name: gameName.trim(),
+          country: selectedCountry,
           locationsPerRound,
           timeLimitSeconds,
         }),
@@ -111,6 +116,30 @@ export default function StartGameButton({ groupId }: StartGameButtonProps) {
             }
           }}
         />
+
+        {/* Country Selection */}
+        <div className="space-y-2">
+          <label className="block text-body-small font-medium text-text-primary">
+            {t("selectCountry")}
+          </label>
+          <div className="flex gap-2">
+            {countryOptions.map((countryKey) => (
+              <button
+                key={countryKey}
+                type="button"
+                onClick={() => setSelectedCountry(countryKey)}
+                className={cn(
+                  "flex-1 py-2 px-3 rounded-lg border-2 font-medium transition-all text-sm",
+                  selectedCountry === countryKey
+                    ? "border-success bg-success/10 text-success"
+                    : "border-glass-border bg-surface-2 text-text-secondary hover:border-success/50"
+                )}
+              >
+                {getCountryName(countryKey, locale)}
+              </button>
+            ))}
+          </div>
+        </div>
 
         {/* Locations per Round */}
         <div className="space-y-2">
