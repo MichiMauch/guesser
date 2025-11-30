@@ -10,6 +10,7 @@ import Leaderboard from "@/components/Leaderboard";
 import InviteCode from "@/components/InviteCode";
 import RoundControlPanel from "@/components/RoundControlPanel";
 import LeaveGroupButton from "@/components/LeaveGroupButton";
+import RevealLeaderboardButton from "@/components/RevealLeaderboardButton";
 import GameStatusPoller from "@/components/GameStatusPoller";
 import CompletedGamesList from "@/components/CompletedGamesList";
 import { Card } from "@/components/ui/Card";
@@ -193,17 +194,7 @@ export default async function GroupPage({
 
         {isAdmin && (
           <div className="flex justify-end">
-            <a
-              href={`/${locale}/groups/${groupId}/leaderboard`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:text-primary-light text-body-small font-medium flex items-center gap-1"
-            >
-              {t("showLeaderboard")}
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-              </svg>
-            </a>
+            <RevealLeaderboardButton groupId={groupId} />
           </div>
         )}
 
