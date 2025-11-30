@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useState, useEffect } from "react";
 
 // All 197 ISO 3166-1 Alpha-2 country codes
 const ALL_COUNTRY_CODES = [
@@ -27,21 +27,24 @@ interface FlagBackgroundProps {
 }
 
 export default function FlagBackground({ activeCountryCodes = ["ch", "si"] }: FlagBackgroundProps) {
-  const activeSet = new Set(activeCountryCodes.map(c => c.toLowerCase()));
+  const [rows, setRows] = useState<string[][]>([]);
 
-  // Filter out active countries and shuffle into rows
-  const rows = useMemo(() => {
-    // Exclude active countries from background
+  // Shuffle flags only on client mount to avoid hydration mismatch
+  useEffect(() => {
+    const activeSet = new Set(activeCountryCodes.map(c => c.toLowerCase()));
     const backgroundCodes = ALL_COUNTRY_CODES.filter(code => !activeSet.has(code));
     const shuffled = [...backgroundCodes].sort(() => Math.random() - 0.5);
-    const rowCount = 8; // More rows with big flags to fill screen
+    const rowCount = 8;
     const perRow = Math.ceil(shuffled.length / rowCount);
     const result: string[][] = [];
     for (let i = 0; i < rowCount; i++) {
       result.push(shuffled.slice(i * perRow, (i + 1) * perRow));
     }
-    return result;
-  }, [activeSet]);
+    setRows(result);
+  }, [activeCountryCodes]);
+
+  // Don't render until client-side shuffle is done
+  if (rows.length === 0) return null;
 
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-[0.12]">
