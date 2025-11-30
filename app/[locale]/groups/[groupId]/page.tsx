@@ -8,12 +8,10 @@ import { eq, and, desc, sql } from "drizzle-orm";
 import { getTranslations } from "next-intl/server";
 import Leaderboard from "@/components/Leaderboard";
 import InviteCode from "@/components/InviteCode";
-import StartGameButton from "@/components/StartGameButton";
 import RoundControlPanel from "@/components/RoundControlPanel";
-import PlayButton from "@/components/PlayButton";
 import LeaveGroupButton from "@/components/LeaveGroupButton";
+import GameStatusPoller from "@/components/GameStatusPoller";
 import { Card } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { SetPageTitle } from "@/components/SetPageTitle";
@@ -111,64 +109,20 @@ export default async function GroupPage({
       <SetPageTitle title={group.name} />
 
       <main className="max-w-6xl mx-auto px-4 py-6 space-y-6">
-        {/* Play Card */}
+        {/* Play Card - with polling for real-time updates */}
         <div className="max-w-md mx-auto space-y-3">
-          {currentGame && locationsCount >= currentGame.locationsPerRound ? (
-            <>
-              <PlayButton
-                groupId={groupId}
-                currentRound={currentGame.currentRound}
-                userCompletedRounds={userCompletedRounds}
-              />
-              {/* Game Info */}
-              <div className="text-center">
-                {currentGame.name && (
-                  <p className="text-h3 text-primary">{currentGame.name}</p>
-                )}
-                <p className="text-body-small text-text-secondary">
-                  {t("roundLocations", { round: currentGame.currentRound, count: currentGame.locationsPerRound })}
-                </p>
-                {isAdmin && (
-                  <Badge variant="primary" size="sm" className="mt-2">
-                    {tCommon("admin")}
-                  </Badge>
-                )}
-              </div>
-            </>
-          ) : locationsCount < 3 ? (
-            <Card variant="surface" padding="lg" className="opacity-60">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-xl bg-surface-3 flex items-center justify-center">
-                  <svg className="w-7 h-7 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-h3 text-text-muted">{t("play")}</h3>
-                  <p className="text-body-small text-text-muted">
-                    {t("minLocationsRequired", { count: 3 })}
-                  </p>
-                </div>
-              </div>
-            </Card>
-          ) : isAdmin ? (
-            <StartGameButton groupId={groupId} />
-          ) : (
-            <Card variant="surface" padding="lg" className="opacity-60">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-xl bg-surface-3 flex items-center justify-center">
-                  <svg className="w-7 h-7 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-h3 text-text-muted">{t("play")}</h3>
-                  <p className="text-body-small text-text-muted">{t("noActiveGame")}</p>
-                </div>
-              </div>
-            </Card>
-          )}
+          <GameStatusPoller
+            groupId={groupId}
+            initialGameStatus={currentGame ? {
+              gameId: currentGame.id,
+              currentRound: currentGame.currentRound,
+              userCompletedRounds,
+              gameName: currentGame.name,
+              locationsPerRound: currentGame.locationsPerRound,
+            } : null}
+            locationsCount={locationsCount}
+            isAdmin={isAdmin}
+          />
         </div>
 
         {/* Round Control Panel (Admin) */}
