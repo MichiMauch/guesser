@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, Fragment } from "react";
-import { MapContainer, Marker, Popup, GeoJSON, Polyline } from "react-leaflet";
+import { MapContainer, Marker, Popup, GeoJSON, Polyline, Pane } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { getBoundsForCountry } from "@/lib/distance";
@@ -97,24 +97,26 @@ export default function SummaryMap({ country = DEFAULT_COUNTRY, markers, height 
     >
       {geoData && <GeoJSON data={geoData} style={geoStyle} />}
 
-      {/* First render all Polylines (so they appear above GeoJSON but below markers) */}
-      {markers.map((pair, index) =>
-        pair.guess ? (
-          <Polyline
-            key={`line-${index}`}
-            positions={[
-              [pair.guess.lat, pair.guess.lng],
-              [pair.target.lat, pair.target.lng],
-            ]}
-            pathOptions={{
-              color: getLineColor(pair.distanceKm),
-              weight: 3,
-              opacity: 1,
-              dashArray: "5, 10",
-            }}
-          />
-        ) : null
-      )}
+      {/* Polylines in custom pane to appear above GeoJSON */}
+      <Pane name="polylines" style={{ zIndex: 450 }}>
+        {markers.map((pair, index) =>
+          pair.guess ? (
+            <Polyline
+              key={`line-${index}`}
+              positions={[
+                [pair.guess.lat, pair.guess.lng],
+                [pair.target.lat, pair.target.lng],
+              ]}
+              pathOptions={{
+                color: getLineColor(pair.distanceKm),
+                weight: 3,
+                opacity: 1,
+                dashArray: "5, 10",
+              }}
+            />
+          ) : null
+        )}
+      </Pane>
 
       {/* Then render all markers */}
       {markers.map((pair, index) => (
