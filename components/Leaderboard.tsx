@@ -27,11 +27,6 @@ interface LeaderboardProps {
 
 export default function Leaderboard({ groupId, gameId, blurred = false }: LeaderboardProps) {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [game, setGame] = useState<{
-    weekNumber: number;
-    year: number;
-    totalRounds: number;
-  } | null>(null);
   const [type, setType] = useState<"weekly" | "alltime">("weekly");
   const [loading, setLoading] = useState(true);
   const [revealed, setRevealed] = useState(false);
@@ -48,7 +43,6 @@ export default function Leaderboard({ groupId, gameId, blurred = false }: Leader
       if (response.ok) {
         const data = await response.json();
         setLeaderboard(data.leaderboard);
-        setGame(data.game || null);
         if (data.revealed !== undefined) {
           setRevealed(data.revealed);
         }
@@ -106,12 +100,6 @@ export default function Leaderboard({ groupId, gameId, blurred = false }: Leader
           </button>
         </div>
       </div>
-
-      {game && type === "weekly" && (
-        <p className="text-body-small text-text-secondary mb-4">
-          KW {game.weekNumber}/{game.year} &middot; {game.totalRounds} {t("days", { count: game.totalRounds })}
-        </p>
-      )}
 
       <div className={cn(showBlur && "blur-md select-none pointer-events-none transition-all")}>
         {loading ? (
