@@ -37,6 +37,7 @@
   },
   "join": {
     "title": "Pridruži se skupini",
+    "subtitle": "Vnesi kodo povabila za pridružitev skupini",
     "inviteCode": "Koda za povabilo",
     "placeholder": "npr. abc12345",
     "submit": "Pridruži se",

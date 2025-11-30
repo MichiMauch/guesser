@@ -3,7 +3,7 @@
 import { useState, useEffect, use, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
-import SwitzerlandMap from "@/components/Map";
+import SwitzerlandMap, { SummaryMap } from "@/components/Map";
 import toast from "react-hot-toast";
 import { generateHintCircleCenter, HINT_CIRCLE_RADIUS_KM } from "@/lib/hint";
 import { useTranslations } from "next-intl";
@@ -28,6 +28,8 @@ interface Guess {
   gameRoundId: string;
   distanceKm: number;
   roundNumber: number;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 interface Game {
@@ -214,6 +216,8 @@ export default function PlayPage({
             gameRoundId: currentRound.id,
             distanceKm: data.distanceKm,
             roundNumber: currentRound.roundNumber,
+            latitude: markerPosition.lat,
+            longitude: markerPosition.lng,
           },
         ]);
         setShowResult(true);
@@ -249,6 +253,8 @@ export default function PlayPage({
             gameRoundId: currentRound.id,
             distanceKm: 400,
             roundNumber: currentRound.roundNumber,
+            latitude: null,
+            longitude: null,
           },
         ];
         setUserGuesses(newGuesses);
@@ -367,6 +373,22 @@ export default function PlayPage({
       0
     );
 
+    // Prepare marker data for SummaryMap
+    const summaryMarkers = currentRoundGuesses.map((guess) => {
+      const location = currentRoundLocations.find((r) => r.id === guess.gameRoundId);
+      return {
+        guess: guess.latitude != null && guess.longitude != null
+          ? { lat: guess.latitude, lng: guess.longitude }
+          : null,
+        target: {
+          lat: location?.latitude ?? 0,
+          lng: location?.longitude ?? 0,
+          name: location?.locationName ?? "",
+        },
+        distanceKm: guess.distanceKm,
+      };
+    });
+
     return (
       <div className="min-h-screen bg-background">
         <header className="sticky top-0 z-50 border-b border-glass-border bg-surface-1/80 backdrop-blur-xl">
@@ -383,7 +405,13 @@ export default function PlayPage({
             <h1 className="text-h3 text-primary">{t("result")}</h1>
           </div>
         </header>
-        <main className="max-w-md mx-auto px-4 py-4">
+        <main className="max-w-2xl mx-auto px-4 py-4 space-y-4">
+          {/* Summary Map */}
+          <Card variant="elevated" padding="md">
+            <SummaryMap markers={summaryMarkers} height="300px" />
+          </Card>
+
+          {/* Results Card */}
           <Card variant="elevated" padding="lg" className="text-center space-y-4">
             <div className="space-y-1">
               <span className="text-3xl">🎉</span>

@@ -37,6 +37,7 @@
   },
   "join": {
     "title": "Join Group",
+    "subtitle": "Enter the invite code to join a group",
     "inviteCode": "Invite Code",
     "placeholder": "e.g. abc12345",
     "submit": "Join",

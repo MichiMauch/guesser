@@ -2,6 +2,7 @@
 
 import toast from "react-hot-toast";
 import { useTranslations } from "next-intl";
+import { useParams } from "next/navigation";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 
@@ -11,10 +12,12 @@ interface InviteCodeProps {
 
 export default function InviteCode({ code }: InviteCodeProps) {
   const t = useTranslations("invite");
+  const params = useParams();
+  const locale = params.locale as string;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(
-      `${window.location.origin}/join/${code}`
+      `${window.location.origin}/${locale}/join/${code}`
     );
     toast.success(t("copied"));
   };

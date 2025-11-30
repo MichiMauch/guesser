@@ -37,6 +37,7 @@
   },
   "join": {
     "title": "Gruppe beitreten",
+    "subtitle": "Gib den Einladungscode ein, um einer Gruppe beizutreten",
     "inviteCode": "Einladungscode",
     "placeholder": "z.B. abc12345",
     "submit": "Beitreten",

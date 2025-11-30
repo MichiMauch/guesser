@@ -79,7 +79,7 @@ export default function JoinPage() {
             <Input
               label={t("inviteCode")}
               value={inviteCode}
-              onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+              onChange={(e) => setInviteCode(e.target.value)}
               placeholder={t("placeholder")}
               className="font-mono text-lg tracking-wider text-center"
               required

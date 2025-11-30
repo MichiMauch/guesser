@@ -12,4 +12,13 @@ const SwitzerlandMap = dynamic(() => import("./SwitzerlandMap"), {
   ),
 });
 
+export const SummaryMap = dynamic(() => import("./SummaryMap"), {
+  ssr: false,
+  loading: () => (
+    <div className="h-[300px] bg-surface-1 rounded-lg flex items-center justify-center">
+      <span className="text-text-muted">Karte wird geladen...</span>
+    </div>
+  ),
+});
+
 export default SwitzerlandMap;
