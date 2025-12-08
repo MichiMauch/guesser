@@ -26,6 +26,7 @@ interface GameRound {
   longitude: number;
   country: string;
   gameType?: string | null;
+  timeLimitSeconds?: number | null;
 }
 
 interface Guess {
@@ -164,18 +165,20 @@ export default function PlayPage({
     });
   }, [loading, currentRound, hintEnabled, showResult, isLocationPlayed, game?.country]);
 
-  // Timer effect
+  // Timer effect - use per-round time limit, fallback to game-level
+  const currentTimeLimit = currentRound?.timeLimitSeconds ?? timeLimitSeconds;
+
   useEffect(() => {
-    if (!timeLimitSeconds || showResult || isLocationPlayed || !currentRound || loading) {
+    if (!currentTimeLimit || showResult || isLocationPlayed || !currentRound || loading) {
       return;
     }
 
     setTimeExpired(false);
-    setTimeRemaining(timeLimitSeconds);
+    setTimeRemaining(currentTimeLimit);
     setStartTime(Date.now());
 
     const timerStartTime = Date.now();
-    const timerEndTime = timerStartTime + timeLimitSeconds * 1000;
+    const timerEndTime = timerStartTime + currentTimeLimit * 1000;
 
     const interval = setInterval(() => {
       const now = Date.now();
@@ -191,7 +194,7 @@ export default function PlayPage({
     }, 100);
 
     return () => clearInterval(interval);
-  }, [currentRoundIndex, timeLimitSeconds, showResult, loading, currentRound, isLocationPlayed, t]);
+  }, [currentRoundIndex, currentTimeLimit, showResult, loading, currentRound, isLocationPlayed, t]);
 
   const handleGuess = async () => {
     if (!markerPosition || !currentRound || submitting) return;
@@ -631,10 +634,10 @@ export default function PlayPage({
             showResult && lastResult && lastResult.distanceKm >= 20 && lastResult.distanceKm < 100 && "text-accent",
             showResult && lastResult && lastResult.distanceKm >= 100 && "text-text-primary"
           )}>
-            {!showResult && !timeExpired && timeLimitSeconds && (
-              <>{timeRemaining !== null ? timeRemaining.toFixed(1) : timeLimitSeconds.toFixed(1)}s</>
+            {!showResult && !timeExpired && currentTimeLimit && (
+              <>{timeRemaining !== null ? timeRemaining.toFixed(1) : currentTimeLimit.toFixed(1)}s</>
             )}
-            {!showResult && !timeExpired && !timeLimitSeconds && "—"}
+            {!showResult && !timeExpired && !currentTimeLimit && "—"}
             {timeExpired && !showResult && t("timeUp")}
             {showResult && lastResult && <>{lastResult.distanceKm.toFixed(1)} km</>}
           </span>

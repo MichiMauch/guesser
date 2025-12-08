@@ -143,6 +143,7 @@ export const gameRounds = sqliteTable("gameRounds", {
   locationSource: text("locationSource", { enum: ["locations", "worldLocations"] }).notNull().default("locations"),
   country: text("country").notNull().default("switzerland"), // Country key for this round (can differ from game.country)
   gameType: text("gameType"), // Full game type ID for this round (e.g., "country:switzerland", "world:capitals")
+  timeLimitSeconds: integer("timeLimitSeconds"), // Time limit for this round (null = no limit)
 });
 
 // Player Guesses

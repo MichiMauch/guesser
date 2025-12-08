@@ -136,13 +136,14 @@ export async function GET(request: Request) {
         longitude: locationInfo?.longitude ?? 0,
         country: round.country,
         gameType: round.gameType, // Include the round's gameType
+        timeLimitSeconds: round.timeLimitSeconds, // Time limit for this specific round
       };
     });
 
     return NextResponse.json({
       game,
       rounds,
-      timeLimitSeconds: game.timeLimitSeconds ?? null,
+      timeLimitSeconds: game.timeLimitSeconds ?? null, // Legacy: game-level time limit
       hintEnabled: user?.hintEnabled ?? false
     });
   } catch (error) {
