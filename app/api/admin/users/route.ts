@@ -21,6 +21,7 @@ export async function GET() {
         email: users.email,
         image: users.image,
         hintEnabled: users.hintEnabled,
+        isSuperAdmin: users.isSuperAdmin,
         createdAt: sql<string>`COALESCE(${users.emailVerified}, datetime('now'))`,
         groupCount: sql<number>`(SELECT COUNT(*) FROM groupMembers WHERE groupMembers.userId = ${users.id})`,
         guessCount: sql<number>`(SELECT COUNT(*) FROM guesses WHERE guesses.userId = ${users.id})`,
@@ -91,23 +92,56 @@ export async function PATCH(request: Request) {
   }
 
   try {
-    const { userId, hintEnabled } = await request.json();
+    const body = await request.json();
+    const { userId, hintEnabled, isSuperAdmin: newSuperAdminStatus } = body;
 
-    if (!userId || typeof hintEnabled !== "boolean") {
+    if (!userId) {
       return NextResponse.json(
-        { error: "User ID and hintEnabled are required" },
+        { error: "User ID is required" },
+        { status: 400 }
+      );
+    }
+
+    // Build update object based on what's provided
+    const updateData: { hintEnabled?: boolean; isSuperAdmin?: boolean } = {};
+
+    if (typeof hintEnabled === "boolean") {
+      updateData.hintEnabled = hintEnabled;
+    }
+
+    if (typeof newSuperAdminStatus === "boolean") {
+      // Prevent removing your own SuperAdmin status
+      const targetUser = await db
+        .select({ email: users.email })
+        .from(users)
+        .where(eq(users.id, userId))
+        .get();
+
+      if (targetUser?.email === session.user.email && !newSuperAdminStatus) {
+        return NextResponse.json(
+          { error: "Du kannst dir nicht selbst die Admin-Rechte entziehen" },
+          { status: 400 }
+        );
+      }
+
+      updateData.isSuperAdmin = newSuperAdminStatus;
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json(
+        { error: "Keine gültigen Felder zum Aktualisieren" },
         { status: 400 }
       );
     }
 
     await db
       .update(users)
-      .set({ hintEnabled })
+      .set(updateData)
       .where(eq(users.id, userId));
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error updating user hint:", error);
+    console.error("Error updating user:", error);
     return NextResponse.json(
       { error: "Failed to update user" },
       { status: 500 }

@@ -29,6 +29,7 @@ interface User {
   email: string | null;
   image: string | null;
   hintEnabled: boolean | null;
+  isSuperAdmin: boolean | null;
   createdAt: string;
   groupCount: number;
   guessCount: number;
@@ -194,6 +195,29 @@ export default function AdminPage() {
         ));
       } else {
         toast.error("Fehler beim Ändern");
+      }
+    } catch {
+      toast.error("Fehler beim Ändern");
+    }
+  };
+
+  const handleToggleSuperAdmin = async (userId: string, currentState: boolean | null) => {
+    const newState = !currentState;
+    try {
+      const response = await fetch("/api/admin/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, isSuperAdmin: newState }),
+      });
+
+      if (response.ok) {
+        toast.success(newState ? "Admin-Rechte erteilt" : "Admin-Rechte entzogen");
+        setUsers(users.map((u) =>
+          u.id === userId ? { ...u, isSuperAdmin: newState } : u
+        ));
+      } else {
+        const data = await response.json();
+        toast.error(data.error || "Fehler beim Ändern");
       }
     } catch {
       toast.error("Fehler beim Ändern");
@@ -482,6 +506,7 @@ export default function AdminPage() {
                     <th className="text-left px-6 py-3 text-caption font-medium text-text-secondary">Email</th>
                     <th className="text-center px-6 py-3 text-caption font-medium text-text-secondary">Gruppen</th>
                     <th className="text-center px-6 py-3 text-caption font-medium text-text-secondary">Guesses</th>
+                    <th className="text-center px-6 py-3 text-caption font-medium text-text-secondary">Admin</th>
                     <th className="text-center px-6 py-3 text-caption font-medium text-text-secondary">Hilfskreis</th>
                     <th className="text-right px-6 py-3 text-caption font-medium text-text-secondary">Aktionen</th>
                   </tr>
@@ -499,17 +524,25 @@ export default function AdminPage() {
                       </td>
                       <td className="px-6 py-4 text-text-muted text-sm">
                         {user.email}
-                        {user.email === "michi.mauch@netnode.ch" && (
-                          <Badge variant="error" size="sm" className="ml-2">
-                            Admin
-                          </Badge>
-                        )}
                       </td>
                       <td className="px-6 py-4 text-center text-text-secondary">
                         {user.groupCount}
                       </td>
                       <td className="px-6 py-4 text-center text-text-secondary">
                         {user.guessCount}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <button
+                          onClick={() => handleToggleSuperAdmin(user.id, user.isSuperAdmin)}
+                          className={cn(
+                            "px-3 py-1 rounded-lg text-sm font-medium transition-colors",
+                            user.isSuperAdmin
+                              ? "bg-error/20 text-error hover:bg-error/30"
+                              : "bg-surface-3 text-text-muted hover:bg-surface-2"
+                          )}
+                        >
+                          {user.isSuperAdmin ? "Admin" : "User"}
+                        </button>
                       </td>
                       <td className="px-6 py-4 text-center">
                         <button
@@ -525,7 +558,7 @@ export default function AdminPage() {
                         </button>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        {user.email !== "michi.mauch@netnode.ch" ? (
+                        {!user.isSuperAdmin ? (
                           <Button
                             variant="danger"
                             size="sm"
@@ -543,7 +576,7 @@ export default function AdminPage() {
                   ))}
                   {users.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="px-6 py-8 text-center text-text-muted">
+                      <td colSpan={7} className="px-6 py-8 text-center text-text-muted">
                         Keine User vorhanden
                       </td>
                     </tr>

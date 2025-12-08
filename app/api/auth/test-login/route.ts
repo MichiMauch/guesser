@@ -43,7 +43,7 @@ export async function POST(request: Request) {
         email: testUserEmail,
         image: null,
       });
-      user = { id: testUserId, name: testUserName, email: testUserEmail, emailVerified: null, image: null, hintEnabled: null };
+      user = { id: testUserId, name: testUserName, email: testUserEmail, emailVerified: null, image: null, hintEnabled: null, isSuperAdmin: null };
     }
 
     // Create a session
@@ -69,7 +69,7 @@ export async function POST(request: Request) {
       path: "/",
     });
 
-    return NextResponse.json({ success: true, user: { id: user.id, name: user.name } });
+    return NextResponse.json({ success: true, user: { id: user!.id, name: user!.name } });
   } catch (error) {
     console.error("Error creating test login:", error);
     return NextResponse.json(
