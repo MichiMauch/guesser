@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState, Fragment } from "react";
-import { MapContainer, Marker, Popup, GeoJSON, Polyline, Pane } from "react-leaflet";
+import { MapContainer, Marker, Popup, GeoJSON, Polyline, Pane, ImageOverlay } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { getGameTypeConfig, DEFAULT_GAME_TYPE } from "@/lib/game-types";
+import { getGameTypeConfig, DEFAULT_GAME_TYPE, isImageGameType } from "@/lib/game-types";
 
 // Blue marker for user guesses
 const guessIcon = L.icon({
@@ -55,15 +55,19 @@ export default function SummaryMap({ gameType, country, markers, height = "300px
   const effectiveGameType = gameType || (country ? `country:${country}` : DEFAULT_GAME_TYPE);
   const gameTypeConfig = getGameTypeConfig(effectiveGameType);
   const isWorldMap = gameTypeConfig.bounds === null;
+  const isImageMap = isImageGameType(effectiveGameType);
 
   useEffect(() => {
     setMounted(true);
-    setGeoData(null); // Reset on change
-    fetch(gameTypeConfig.geoJsonFile)
-      .then((res) => res.json())
-      .then((data) => setGeoData(data))
-      .catch((err) => console.error("Error loading GeoJSON:", err));
-  }, [gameTypeConfig.geoJsonFile]);
+    // Only load GeoJSON for non-image maps
+    if (!isImageMap && gameTypeConfig.geoJsonFile) {
+      setGeoData(null); // Reset on change
+      fetch(gameTypeConfig.geoJsonFile)
+        .then((res) => res.json())
+        .then((data) => setGeoData(data))
+        .catch((err) => console.error("Error loading GeoJSON:", err));
+    }
+  }, [gameTypeConfig.geoJsonFile, isImageMap]);
 
   if (!mounted) {
     return (
@@ -76,13 +80,21 @@ export default function SummaryMap({ gameType, country, markers, height = "300px
     );
   }
 
-  // Build bounds only for country maps
-  const bounds = isWorldMap
-    ? undefined
-    : L.latLngBounds(
-        [gameTypeConfig.bounds!.southWest.lat, gameTypeConfig.bounds!.southWest.lng],
-        [gameTypeConfig.bounds!.northEast.lat, gameTypeConfig.bounds!.northEast.lng]
-      );
+  // Build bounds based on map type
+  let bounds: L.LatLngBounds | undefined;
+  if (isImageMap && gameTypeConfig.imageBounds) {
+    // For image maps, use pixel bounds
+    bounds = L.latLngBounds(
+      [gameTypeConfig.imageBounds[0][0], gameTypeConfig.imageBounds[0][1]],
+      [gameTypeConfig.imageBounds[1][0], gameTypeConfig.imageBounds[1][1]]
+    );
+  } else if (!isWorldMap && gameTypeConfig.bounds) {
+    // For country maps, use geo bounds
+    bounds = L.latLngBounds(
+      [gameTypeConfig.bounds.southWest.lat, gameTypeConfig.bounds.southWest.lng],
+      [gameTypeConfig.bounds.northEast.lat, gameTypeConfig.bounds.northEast.lng]
+    );
+  }
 
   const geoStyle = {
     color: "#00D9FF",
@@ -91,24 +103,41 @@ export default function SummaryMap({ gameType, country, markers, height = "300px
     fillOpacity: isWorldMap ? 0.8 : 1,
   };
 
-  // Map container props differ for world vs country maps
+  // Map container props differ for world vs country vs image maps
   const mapContainerProps: Record<string, unknown> = {
     center: [gameTypeConfig.defaultCenter.lat, gameTypeConfig.defaultCenter.lng],
-    zoom: isWorldMap ? 2 : 7,
+    zoom: isImageMap ? gameTypeConfig.defaultZoom : (isWorldMap ? 2 : 7),
     style: { height, width: "100%", backgroundColor: "#1A1F26" },
     className: "rounded-lg",
     minZoom: gameTypeConfig.minZoom,
   };
 
-  // Only add maxBounds for country maps
-  if (!isWorldMap && bounds) {
+  // Add CRS.Simple for image maps
+  if (isImageMap) {
+    mapContainerProps.crs = L.CRS.Simple;
+    mapContainerProps.maxZoom = 3;
+  }
+
+  // Add maxBounds for country and image maps
+  if (bounds) {
     mapContainerProps.maxBounds = bounds;
     mapContainerProps.maxBoundsViscosity = 1.0;
   }
 
+  // For image maps, always use silhouette if available
+  const imageUrl = isImageMap
+    ? (gameTypeConfig.silhouetteUrl || gameTypeConfig.imageUrl)
+    : null;
+
   return (
     <MapContainer {...mapContainerProps} key={effectiveGameType}>
-      {geoData && <GeoJSON key="geo-json" data={geoData} style={geoStyle} />}
+      {/* Image background for image maps */}
+      {isImageMap && imageUrl && bounds && (
+        <ImageOverlay key="image-overlay" url={imageUrl} bounds={bounds} />
+      )}
+
+      {/* GeoJSON for country/world maps */}
+      {!isImageMap && geoData && <GeoJSON key="geo-json" data={geoData} style={geoStyle} />}
 
       {/* Polylines in custom pane to appear above GeoJSON */}
       <Pane key="polylines-pane" name="polylines" style={{ zIndex: 450 }}>

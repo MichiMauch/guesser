@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Card } from "@/components/ui/Card";
 import { Avatar } from "@/components/ui/Avatar";
 import { MedalBadge } from "@/components/ui/Badge";
+import { formatTotalDistance } from "@/lib/distance";
 import { cn } from "@/lib/utils";
 
 interface LeaderboardEntry {
@@ -229,7 +230,7 @@ export default function GameHistoryModal({
                         entry.rank === 1 ? "text-accent" : "text-text-primary"
                       )}
                     >
-                      {entry.totalDistance.toFixed(1)} km
+                      {formatTotalDistance(entry.totalDistance)}
                     </p>
                   </div>
                 </div>

@@ -1,12 +1,12 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { games, groupMembers, locations, worldLocations, gameRounds } from "@/lib/db/schema";
+import { games, groupMembers, locations, worldLocations, imageLocations, gameRounds } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { nanoid } from "nanoid";
 import { getLocationCountryName } from "@/lib/countries";
-import { getEffectiveGameType, isWorldGameType, getWorldCategory } from "@/lib/game-types";
+import { getEffectiveGameType, isWorldGameType, getWorldCategory, isImageGameType, getImageMapId } from "@/lib/game-types";
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
@@ -73,6 +73,7 @@ export async function POST(request: Request) {
     // Determine game type - use requested type if provided, otherwise fall back to game's type
     const effectiveGameType = requestedGameType || getEffectiveGameType(game);
     const isWorld = isWorldGameType(effectiveGameType);
+    const isImage = isImageGameType(effectiveGameType);
 
     // Use requested locationsPerRound if provided, otherwise fall back to game's default
     const effectiveLocationsPerRound = requestedLocationsPerRound || game.locationsPerRound;
@@ -87,9 +88,31 @@ export async function POST(request: Request) {
 
     let availableLocations: Array<{ id: string; name: string; latitude: number; longitude: number }> = [];
     let roundCountry: string;
-    let locationSource: "locations" | "worldLocations" = "locations";
+    let locationSource: "locations" | "worldLocations" | "imageLocations" = "locations";
 
-    if (isWorld) {
+    if (isImage) {
+      // Image game type - get locations from imageLocations table
+      const imageMapId = getImageMapId(effectiveGameType);
+      if (imageMapId) {
+        const imageLocs = await db
+          .select()
+          .from(imageLocations)
+          .where(eq(imageLocations.imageMapId, imageMapId));
+
+        availableLocations = imageLocs
+          .filter((loc) => !usedLocationIds.has(loc.id))
+          .map((loc) => ({
+            id: loc.id,
+            name: loc.name,
+            // For image maps, use x/y as lat/lng (Leaflet CRS.Simple convention: lat=y, lng=x)
+            latitude: loc.y,
+            longitude: loc.x,
+          }));
+      }
+      // For image games, use the image map id as the country identifier
+      roundCountry = imageMapId || "image";
+      locationSource = "imageLocations";
+    } else if (isWorld) {
       // World game type - get locations from worldLocations table
       const category = getWorldCategory(effectiveGameType);
       if (category) {

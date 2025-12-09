@@ -6,6 +6,7 @@ import {
   gameRounds,
   locations,
   worldLocations,
+  imageLocations,
   groupMembers,
   users,
 } from "@/lib/db/schema";
@@ -89,10 +90,12 @@ export async function GET(request: Request) {
     // Separate rounds by locationSource
     const countryRoundIds = allRounds.filter(r => r.locationSource === "locations").map(r => r.locationId);
     const worldRoundIds = allRounds.filter(r => r.locationSource === "worldLocations").map(r => r.locationId);
+    const imageRoundIds = allRounds.filter(r => r.locationSource === "imageLocations").map(r => r.locationId);
 
     // Fetch location names from respective tables (include all localized names)
     const countryLocationsMap = new Map<string, LocalizedLocation & { latitude: number; longitude: number }>();
     const worldLocationsMap = new Map<string, LocalizedLocation & { latitude: number; longitude: number }>();
+    const imageLocationsMap = new Map<string, LocalizedLocation & { latitude: number; longitude: number }>();
 
     if (countryRoundIds.length > 0) {
       const countryLocs = await db.select().from(locations);
@@ -122,9 +125,31 @@ export async function GET(request: Request) {
       });
     }
 
+    if (imageRoundIds.length > 0) {
+      const imageLocs = await db.select().from(imageLocations);
+      imageLocs.forEach(loc => {
+        imageLocationsMap.set(loc.id, {
+          name: loc.name,
+          nameDe: loc.nameDe,
+          nameEn: loc.nameEn,
+          nameSl: null, // imageLocations doesn't have nameSl
+          // For image maps: lat=y, lng=x (Leaflet CRS.Simple convention)
+          latitude: loc.y,
+          longitude: loc.x,
+        });
+      });
+    }
+
     // Combine rounds with location info (using localized names)
     const rounds = allRounds.map(round => {
-      const locationMap = round.locationSource === "worldLocations" ? worldLocationsMap : countryLocationsMap;
+      let locationMap;
+      if (round.locationSource === "worldLocations") {
+        locationMap = worldLocationsMap;
+      } else if (round.locationSource === "imageLocations") {
+        locationMap = imageLocationsMap;
+      } else {
+        locationMap = countryLocationsMap;
+      }
       const locationInfo = locationMap.get(round.locationId);
       return {
         id: round.id,

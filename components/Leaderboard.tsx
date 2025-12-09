@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/Card";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge, MedalBadge } from "@/components/ui/Badge";
 import { cn } from "@/lib/utils";
+import { formatDistance, formatTotalDistance } from "@/lib/distance";
 import PlayerResultsModal from "./PlayerResultsModal";
 
 interface LeaderboardEntry {
@@ -37,6 +38,7 @@ export default function Leaderboard({ groupId, gameId, blurred = false }: Leader
   const [selectedRound, setSelectedRound] = useState<number | null>(null); // null = total
   const [currentGameId, setCurrentGameId] = useState<string | null>(null);
   const [selectedPlayer, setSelectedPlayer] = useState<LeaderboardEntry | null>(null);
+  const [currentGameType, setCurrentGameType] = useState<string | null>(null);
   const { data: session } = useSession();
   const t = useTranslations("leaderboard");
 
@@ -62,6 +64,9 @@ export default function Leaderboard({ groupId, gameId, blurred = false }: Leader
         }
         if (data.game?.id) {
           setCurrentGameId(data.game.id);
+        }
+        if (data.game?.gameType) {
+          setCurrentGameType(data.game.gameType);
         }
       }
     } catch (err) {
@@ -239,7 +244,9 @@ export default function Leaderboard({ groupId, gameId, blurred = false }: Leader
                     {entry.totalScore} {t("points")}
                   </p>
                   <p className="text-caption text-text-muted tabular-nums">
-                    {entry.totalDistance.toFixed(1)} km
+                    {type === "weekly" && selectedRound !== null
+                      ? formatDistance(entry.totalDistance, currentGameType)
+                      : formatTotalDistance(entry.totalDistance)}
                   </p>
                   {type === "alltime" && entry.gamesPlayed && (
                     <p className="text-caption text-text-muted">

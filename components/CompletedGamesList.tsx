@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Card } from "@/components/ui/Card";
 import { Avatar } from "@/components/ui/Avatar";
 import { MedalBadge } from "@/components/ui/Badge";
+import { formatTotalDistance } from "@/lib/distance";
 import GameHistoryModal from "./GameHistoryModal";
 
 interface CompletedGame {
@@ -86,7 +87,7 @@ export default function CompletedGamesList({
                       {game.winner.userName}
                     </p>
                     <p className="text-caption text-accent font-bold">
-                      {game.winner.totalDistance.toFixed(1)} km
+                      {formatTotalDistance(game.winner.totalDistance)}
                     </p>
                   </div>
                 </div>

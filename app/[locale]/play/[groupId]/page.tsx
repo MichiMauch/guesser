@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import { CountryMap, SummaryMap } from "@/components/Map";
 import { DEFAULT_COUNTRY } from "@/lib/countries";
+import { formatDistance } from "@/lib/distance";
 import { getEffectiveGameType, getGameTypeConfig } from "@/lib/game-types";
 import toast from "react-hot-toast";
 import { generateHintCircleCenter, HINT_CIRCLE_RADIUS_KM } from "@/lib/hint";
@@ -101,7 +102,8 @@ export default function PlayPage({
             `/api/guesses?gameId=${gameData.game.id}`
           );
           if (actualGuessesRes.ok) {
-            const guessesData = await actualGuessesRes.json();
+            const guessesResponse = await actualGuessesRes.json();
+            const guessesData = guessesResponse.guesses || [];
             setUserGuesses(guessesData);
 
             const released = gameData.rounds.filter(
@@ -436,7 +438,7 @@ export default function PlayPage({
                 {currentRoundScore} Pkt
               </p>
               <p className="text-body text-text-muted mt-1 tabular-nums">
-                {currentRoundDistance.toFixed(1)} km Distanz
+                {formatDistance(currentRoundDistance, currentRound?.gameType)} Distanz
               </p>
             </div>
 
@@ -465,7 +467,7 @@ export default function PlayPage({
                         {guess.score} Pkt
                       </span>
                       <span className="text-caption text-text-muted ml-2 tabular-nums">
-                        ({guess.distanceKm.toFixed(1)} km)
+                        ({formatDistance(guess.distanceKm, currentRound?.gameType)})
                       </span>
                     </div>
                   </div>
@@ -639,7 +641,7 @@ export default function PlayPage({
             )}
             {!showResult && !timeExpired && !currentTimeLimit && "—"}
             {timeExpired && !showResult && t("timeUp")}
-            {showResult && lastResult && <>{lastResult.distanceKm.toFixed(1)} km</>}
+            {showResult && lastResult && <>{formatDistance(lastResult.distanceKm, currentRound?.gameType)}</>}
           </span>
 
           {/* Divider */}

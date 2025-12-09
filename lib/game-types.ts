@@ -2,16 +2,20 @@ import { CountryBounds, COUNTRIES } from "./countries";
 
 export interface GameTypeConfig {
   id: string;
-  type: "country" | "world";
+  type: "country" | "world" | "image";
   name: { de: string; en: string; sl: string };
   icon: string;
   geoJsonFile: string;
   bounds: CountryBounds | null; // null = world map (no bounds)
-  timeoutPenalty: number; // km
-  scoreScaleFactor: number; // km at which you get ~37% of max points (e^-1)
+  timeoutPenalty: number; // km or pixels for image maps
+  scoreScaleFactor: number; // km at which you get ~37% of max points (e^-1), or pixels for image maps
   defaultZoom: number;
   minZoom: number;
   defaultCenter: { lat: number; lng: number };
+  // Image-specific fields
+  imageUrl?: string; // URL to the image file
+  silhouetteUrl?: string; // URL to silhouette version (shown during gameplay)
+  imageBounds?: [[number, number], [number, number]]; // [[minY, minX], [maxY, maxX]] in pixels
 }
 
 export const GAME_TYPES: Record<string, GameTypeConfig> = {
@@ -108,6 +112,24 @@ export const GAME_TYPES: Record<string, GameTypeConfig> = {
     minZoom: 1,
     defaultCenter: { lat: 20, lng: 0 },
   },
+  // Image-based game types
+  // Scale: 92 pixels = 10 meters, image is 2330x2229 pixels ≈ 253m x 242m
+  "image:garten": {
+    id: "image:garten",
+    type: "image",
+    name: { de: "Garten", en: "Garden", sl: "Vrt" },
+    icon: "🏡",
+    geoJsonFile: "", // Not used for image maps
+    bounds: null,
+    timeoutPenalty: 0.350, // ~350m diagonal = max distance on image (in km)
+    scoreScaleFactor: 0.035, // ~35m gives good scoring curve for ~253m wide image (in km)
+    defaultZoom: -1, // Start slightly zoomed out for larger image
+    minZoom: -3,
+    defaultCenter: { lat: 1114.5, lng: 1165 }, // Center of image (2229/2, 2330/2)
+    imageUrl: "/images/maps/garten.jpg",
+    silhouetteUrl: "/images/maps/garten-silhouette.jpg",
+    imageBounds: [[0, 0], [2229, 2330]], // [[minY, minX], [maxY, maxX]] - image is 2330x2229
+  },
 };
 
 export const DEFAULT_GAME_TYPE = "country:switzerland";
@@ -183,4 +205,42 @@ export function isWorldGameType(gameTypeId: string | null | undefined): boolean 
 export function getWorldCategory(gameTypeId: string): string | null {
   if (!isWorldGameType(gameTypeId)) return null;
   return gameTypeId.split(":")[1];
+}
+
+/**
+ * Check if a game type is an image-based type
+ */
+export function isImageGameType(gameTypeId: string | null | undefined): boolean {
+  if (!gameTypeId) return false;
+  return gameTypeId.startsWith("image:");
+}
+
+/**
+ * Get the image map ID from an image game type
+ * e.g., "image:garten" -> "garten"
+ */
+export function getImageMapId(gameTypeId: string): string | null {
+  if (!isImageGameType(gameTypeId)) return null;
+  return gameTypeId.split(":")[1];
+}
+
+/**
+ * Get game types grouped by type including image types
+ */
+export function getGameTypesByTypeExtended(): { country: GameTypeConfig[]; world: GameTypeConfig[]; image: GameTypeConfig[] } {
+  const country: GameTypeConfig[] = [];
+  const world: GameTypeConfig[] = [];
+  const image: GameTypeConfig[] = [];
+
+  for (const config of Object.values(GAME_TYPES)) {
+    if (config.type === "country") {
+      country.push(config);
+    } else if (config.type === "world") {
+      world.push(config);
+    } else if (config.type === "image") {
+      image.push(config);
+    }
+  }
+
+  return { country, world, image };
 }

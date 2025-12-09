@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { useEffect, useState } from "react";
+import { formatDistance } from "@/lib/distance";
 
 interface ScorePopupProps {
   /** Is the popup open */
@@ -20,6 +21,8 @@ interface ScorePopupProps {
   buttonText: string;
   /** Click handler for button */
   onContinue: () => void;
+  /** Game type for distance formatting */
+  gameType?: string | null;
   /** Additional className */
   className?: string;
 }
@@ -32,6 +35,7 @@ export function ScorePopup({
   penaltyText,
   buttonText,
   onContinue,
+  gameType,
   className,
 }: ScorePopupProps) {
   const [showScore, setShowScore] = useState(false);
@@ -105,7 +109,7 @@ export function ScorePopup({
 
           {/* Distance as secondary info */}
           <p className="text-body text-text-muted mt-2 tabular-nums">
-            {distance.toFixed(1)} km Distanz
+            {formatDistance(distance, gameType)} Distanz
           </p>
 
           {penaltyText && (
@@ -173,6 +177,7 @@ interface RoundCompletePopupProps {
   onToGroup: () => void;
   leaderboardText?: string;
   groupText?: string;
+  gameType?: string | null;
 }
 
 export function RoundCompletePopup({
@@ -184,6 +189,7 @@ export function RoundCompletePopup({
   onToGroup,
   leaderboardText = "Zur Rangliste",
   groupText = "Zurück zur Gruppe",
+  gameType,
 }: RoundCompletePopupProps) {
   if (!isOpen) return null;
 
@@ -209,7 +215,7 @@ export function RoundCompletePopup({
             {totalScore} Pkt
           </p>
           <p className="text-body text-text-muted mt-1 tabular-nums">
-            {totalDistance.toFixed(1)} km Distanz
+            {formatDistance(totalDistance, gameType)} Distanz
           </p>
         </div>
 

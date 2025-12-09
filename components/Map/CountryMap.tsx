@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { MapContainer, Marker, Popup, useMapEvents, useMap, GeoJSON, Circle, Polyline } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { getGameTypeConfig, DEFAULT_GAME_TYPE } from "@/lib/game-types";
+import { getGameTypeConfig, DEFAULT_GAME_TYPE, isImageGameType } from "@/lib/game-types";
+import ImageMap from "./ImageMap";
 
 // Fix for default markers
 const defaultIcon = L.icon({
@@ -93,10 +94,22 @@ export default function CountryMap({
   const gameTypeConfig = getGameTypeConfig(effectiveGameType);
 
   const isWorldMap = gameTypeConfig.bounds === null;
+  const isImageMap = isImageGameType(effectiveGameType);
 
-  // Debug logging to track gameType issues
-  console.log("CountryMap props:", { gameType, country });
-  console.log("effectiveGameType:", effectiveGameType, "isWorldMap:", isWorldMap);
+  // If this is an image-based map, delegate to ImageMap component
+  if (isImageMap) {
+    return (
+      <ImageMap
+        gameType={effectiveGameType}
+        onMarkerPlace={onMarkerPlace}
+        markerPosition={markerPosition}
+        targetPosition={targetPosition}
+        showTarget={showTarget}
+        interactive={interactive}
+        height={height}
+      />
+    );
+  }
 
   useEffect(() => {
     setMounted(true);

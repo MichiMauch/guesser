@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
 import { Avatar } from "@/components/ui/Avatar";
 import { getScoreRating } from "@/lib/score";
+import { formatDistance, formatTotalDistance } from "@/lib/distance";
 import { cn } from "@/lib/utils";
 
 // Dynamic import for SummaryMap (client-side only)
@@ -174,7 +175,7 @@ export default function PlayerResultsModal({
                 </div>
                 <div className="bg-surface-2 rounded-xl p-4 text-center">
                   <p className="text-caption text-text-muted mb-1">Distanz</p>
-                  <p className="text-h2 font-bold text-text-primary">{totalDistance.toFixed(1)} km</p>
+                  <p className="text-h2 font-bold text-text-primary">{formatTotalDistance(totalDistance)}</p>
                 </div>
               </div>
 
@@ -202,7 +203,7 @@ export default function PlayerResultsModal({
                           {guess.locationName}
                         </p>
                         <p className="text-caption text-text-muted">
-                          {guess.distanceKm.toFixed(1)} km
+                          {formatDistance(guess.distanceKm, guess.gameType)}
                         </p>
                       </div>
                       <div className="text-right">

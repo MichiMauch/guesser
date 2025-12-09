@@ -11,8 +11,13 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Input } from "@/components/ui/Input";
 import { cn } from "@/lib/utils";
+import dynamic from "next/dynamic";
 import SwitzerlandMap from "@/components/Map";
 import ConfirmModal from "@/components/ConfirmModal";
+import { getGameTypesByTypeExtended } from "@/lib/game-types";
+
+// Dynamic import for ImageMap to avoid SSR issues with Leaflet
+const ImageMap = dynamic(() => import("@/components/Map/ImageMap"), { ssr: false });
 
 interface Group {
   id: string;
@@ -43,12 +48,21 @@ interface Location {
   difficulty: string;
 }
 
+interface ImageLocation {
+  id: string;
+  imageMapId: string;
+  name: string;
+  x: number;
+  y: number;
+  difficulty: string;
+}
+
 export default function AdminPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const params = useParams();
   const locale = params.locale as string;
-  const [activeTab, setActiveTab] = useState<"groups" | "users" | "locations">("groups");
+  const [activeTab, setActiveTab] = useState<"groups" | "users" | "locations" | "image-locations">("groups");
   const [groups, setGroups] = useState<Group[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
@@ -84,6 +98,27 @@ export default function AdminPage() {
     fileName: "",
   });
 
+  // Image location states
+  const [imageLocations, setImageLocations] = useState<ImageLocation[]>([]);
+  const [selectedImageMap, setSelectedImageMap] = useState<string>("");
+  const [imageMarkerPosition, setImageMarkerPosition] = useState<{ lat: number; lng: number } | null>(null);
+  const [imageLocationName, setImageLocationName] = useState("");
+  const [imageLocationDifficulty, setImageLocationDifficulty] = useState("medium");
+  const [savingImageLocation, setSavingImageLocation] = useState(false);
+  const [imageLocationError, setImageLocationError] = useState("");
+  const [deleteImageLocationModal, setDeleteImageLocationModal] = useState<{
+    isOpen: boolean;
+    locationId: string | null;
+    locationName: string;
+  }>({
+    isOpen: false,
+    locationId: null,
+    locationName: "",
+  });
+
+  // Get available image maps
+  const imageGameTypes = getGameTypesByTypeExtended().image;
+
   const isSuperAdmin = session?.user?.email === "michi.mauch@netnode.ch";
 
   useEffect(() => {
@@ -94,6 +129,25 @@ export default function AdminPage() {
     }
     fetchData();
   }, [session, status, isSuperAdmin, router, locale]);
+
+  // Fetch image locations when selected map changes
+  useEffect(() => {
+    if (selectedImageMap) {
+      fetchImageLocations(selectedImageMap);
+    }
+  }, [selectedImageMap]);
+
+  const fetchImageLocations = async (imageMapId: string) => {
+    try {
+      const res = await fetch(`/api/image-locations?imageMapId=${imageMapId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setImageLocations(data.locations);
+      }
+    } catch (error) {
+      console.error("Error fetching image locations:", error);
+    }
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -378,6 +432,82 @@ export default function AdminPage() {
     setImportModal({ isOpen: false, country: "Switzerland", fileData: null, fileName: "" });
   };
 
+  // Image location handlers
+  const handleAddImageLocation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!imageMarkerPosition) {
+      setImageLocationError("Bitte setze einen Marker auf dem Bild");
+      return;
+    }
+    if (!selectedImageMap) {
+      setImageLocationError("Bitte wähle eine Bild-Karte aus");
+      return;
+    }
+
+    setSavingImageLocation(true);
+    setImageLocationError("");
+
+    try {
+      const response = await fetch("/api/image-locations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          imageMapId: selectedImageMap,
+          name: imageLocationName,
+          x: imageMarkerPosition.lng, // lng = x
+          y: imageMarkerPosition.lat, // lat = y
+          difficulty: imageLocationDifficulty,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create image location");
+      }
+
+      toast.success("Bild-Ort hinzugefügt");
+      setImageLocationName("");
+      setImageMarkerPosition(null);
+      setImageLocationDifficulty("medium");
+
+      // Refresh image locations
+      await fetchImageLocations(selectedImageMap);
+    } catch {
+      setImageLocationError("Fehler beim Speichern des Ortes");
+    } finally {
+      setSavingImageLocation(false);
+    }
+  };
+
+  const openDeleteImageLocationModal = (locationId: string, name: string) => {
+    setDeleteImageLocationModal({ isOpen: true, locationId, locationName: name });
+  };
+
+  const closeDeleteImageLocationModal = () => {
+    setDeleteImageLocationModal({ isOpen: false, locationId: null, locationName: "" });
+  };
+
+  const handleDeleteImageLocation = async () => {
+    if (!deleteImageLocationModal.locationId) return;
+
+    try {
+      const response = await fetch(
+        `/api/image-locations?id=${deleteImageLocationModal.locationId}`,
+        { method: "DELETE" }
+      );
+
+      if (response.ok) {
+        toast.success("Bild-Ort gelöscht");
+        setImageLocations(imageLocations.filter((l) => l.id !== deleteImageLocationModal.locationId));
+      } else {
+        toast.error("Fehler beim Löschen");
+      }
+    } catch {
+      toast.error("Fehler beim Löschen");
+    } finally {
+      closeDeleteImageLocationModal();
+    }
+  };
+
   const difficultyOptions = [
     { value: "easy", label: "Einfach" },
     { value: "medium", label: "Mittel" },
@@ -433,6 +563,17 @@ export default function AdminPage() {
             )}
           >
             Orte ({locations.length})
+          </button>
+          <button
+            onClick={() => setActiveTab("image-locations")}
+            className={cn(
+              "px-4 py-2 rounded-md font-medium transition-all duration-200",
+              activeTab === "image-locations"
+                ? "bg-primary text-white shadow-sm"
+                : "text-text-secondary hover:text-text-primary hover:bg-surface-3"
+            )}
+          >
+            Bild-Orte ({imageLocations.length})
           </button>
         </div>
 
@@ -740,6 +881,168 @@ export default function AdminPage() {
             </Card>
           </div>
         )}
+
+        {/* Image Locations Tab */}
+        {activeTab === "image-locations" && (
+          <div className="grid gap-6 lg:grid-cols-2">
+            {/* Add new image location */}
+            <Card variant="surface" padding="lg">
+              <h2 className="text-h3 text-text-primary mb-6">Neuen Bild-Ort hinzufügen</h2>
+              <form onSubmit={handleAddImageLocation} className="space-y-6">
+                <div>
+                  <label className="block text-body-small font-medium text-text-primary mb-2">
+                    Bild-Karte auswählen
+                  </label>
+                  <select
+                    value={selectedImageMap}
+                    onChange={(e) => {
+                      setSelectedImageMap(e.target.value);
+                      setImageMarkerPosition(null);
+                    }}
+                    className="w-full px-4 py-3 rounded-xl bg-surface-2 border border-glass-border text-text-primary focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    <option value="">-- Bild wählen --</option>
+                    {imageGameTypes.map((gt) => (
+                      <option key={gt.id} value={gt.id.replace("image:", "")}>
+                        {gt.icon} {gt.name.de}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {selectedImageMap && (
+                  <>
+                    <div>
+                      <label className="block text-body-small font-medium text-text-primary mb-2">
+                        Position auf dem Bild setzen
+                      </label>
+                      <div className="rounded-xl overflow-hidden border border-glass-border">
+                        <ImageMap
+                          gameType={`image:${selectedImageMap}`}
+                          onMarkerPlace={setImageMarkerPosition}
+                          markerPosition={imageMarkerPosition}
+                          height="300px"
+                        />
+                      </div>
+                      {imageMarkerPosition && (
+                        <p className="text-caption text-text-muted mt-2">
+                          Koordinaten: x={Math.round(imageMarkerPosition.lng)}, y={Math.round(imageMarkerPosition.lat)}
+                        </p>
+                      )}
+                    </div>
+
+                    <Input
+                      label="Ortsname"
+                      value={imageLocationName}
+                      onChange={(e) => setImageLocationName(e.target.value)}
+                      placeholder="z.B. Gewächshaus"
+                      required
+                    />
+
+                    <div className="space-y-2">
+                      <label className="block text-body-small font-medium text-text-primary">
+                        Schwierigkeit
+                      </label>
+                      <div className="flex gap-2">
+                        {difficultyOptions.map((option) => (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => setImageLocationDifficulty(option.value)}
+                            className={cn(
+                              "flex-1 py-3 rounded-xl border-2 font-medium transition-all",
+                              imageLocationDifficulty === option.value
+                                ? option.value === "easy"
+                                  ? "border-success bg-success/10 text-success"
+                                  : option.value === "medium"
+                                  ? "border-warning bg-warning/10 text-warning"
+                                  : "border-error bg-error/10 text-error"
+                                : "border-glass-border bg-surface-2 text-text-secondary hover:border-primary/50"
+                            )}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {imageLocationError && <p className="text-error text-body-small">{imageLocationError}</p>}
+
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="lg"
+                  fullWidth
+                  disabled={!selectedImageMap || !imageLocationName || !imageMarkerPosition}
+                  isLoading={savingImageLocation}
+                >
+                  Bild-Ort hinzufügen
+                </Button>
+              </form>
+            </Card>
+
+            {/* Image location list */}
+            <Card variant="surface" padding="lg">
+              <h2 className="text-h3 text-text-primary mb-6">
+                Vorhandene Bild-Orte ({imageLocations.length})
+              </h2>
+
+              {!selectedImageMap ? (
+                <p className="text-text-muted text-center py-8">
+                  Wähle eine Bild-Karte aus, um die Orte zu sehen.
+                </p>
+              ) : imageLocations.length === 0 ? (
+                <p className="text-text-muted text-center py-8">
+                  Noch keine Orte für diese Karte vorhanden.
+                </p>
+              ) : (
+                <div className="space-y-2 max-h-[500px] overflow-y-auto">
+                  {imageLocations.map((location) => (
+                    <div
+                      key={location.id}
+                      className="flex items-center justify-between p-3 rounded-xl bg-surface-2 hover:bg-surface-3 transition-colors"
+                    >
+                      <div>
+                        <p className="font-medium text-text-primary">
+                          {location.name}
+                        </p>
+                        <p className="text-caption text-text-muted">
+                          x={Math.round(location.x)}, y={Math.round(location.y)}
+                        </p>
+                        <Badge
+                          variant={
+                            location.difficulty === "easy"
+                              ? "success"
+                              : location.difficulty === "medium"
+                              ? "warning"
+                              : "error"
+                          }
+                          size="sm"
+                        >
+                          {location.difficulty === "easy"
+                            ? "Einfach"
+                            : location.difficulty === "medium"
+                            ? "Mittel"
+                            : "Schwer"}
+                        </Badge>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openDeleteImageLocationModal(location.id, location.name)}
+                        className="text-error hover:text-error hover:bg-error/10"
+                      >
+                        Löschen
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+          </div>
+        )}
       </main>
 
       <ConfirmModal
@@ -748,6 +1051,14 @@ export default function AdminPage() {
         message={`Möchtest du "${deleteModal.locationName}" wirklich löschen?`}
         onConfirm={handleDeleteLocation}
         onCancel={closeDeleteModal}
+      />
+
+      <ConfirmModal
+        isOpen={deleteImageLocationModal.isOpen}
+        title="Bild-Ort löschen"
+        message={`Möchtest du "${deleteImageLocationModal.locationName}" wirklich löschen?`}
+        onConfirm={handleDeleteImageLocation}
+        onCancel={closeDeleteImageLocationModal}
       />
 
       {/* Import Modal */}

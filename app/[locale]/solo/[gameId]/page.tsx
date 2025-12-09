@@ -98,7 +98,8 @@ export default function SoloPlayPage({
       }
 
       if (guessesRes.ok) {
-        const guessesData = await guessesRes.json();
+        const guessesResponse = await guessesRes.json();
+        const guessesData = guessesResponse.guesses || [];
         setUserGuesses(guessesData);
 
         // Calculate starting index

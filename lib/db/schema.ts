@@ -141,7 +141,7 @@ export const gameRounds = sqliteTable("gameRounds", {
   roundNumber: integer("roundNumber").notNull(), // Which round/day (1, 2, 3...)
   locationIndex: integer("locationIndex").notNull().default(1), // Position within round (1-N)
   locationId: text("locationId").notNull(), // No FK constraint - can reference locations OR worldLocations
-  locationSource: text("locationSource", { enum: ["locations", "worldLocations"] }).notNull().default("locations"),
+  locationSource: text("locationSource", { enum: ["locations", "worldLocations", "imageLocations"] }).notNull().default("locations"),
   country: text("country").notNull().default("switzerland"), // Country key for this round (can differ from game.country)
   gameType: text("gameType"), // Full game type ID for this round (e.g., "country:switzerland", "world:capitals")
   timeLimitSeconds: integer("timeLimitSeconds"), // Time limit for this round (null = no limit)
@@ -160,6 +160,20 @@ export const guesses = sqliteTable("guesses", {
   longitude: real("longitude"), // nullable for timeouts
   distanceKm: real("distanceKm").notNull(),
   timeSeconds: integer("timeSeconds"), // nullable, how long it took
+  createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
+});
+
+// Image Locations (for image-based maps like garden, office, etc.)
+export const imageLocations = sqliteTable("imageLocations", {
+  id: text("id").primaryKey().$defaultFn(() => nanoid()),
+  imageMapId: text("imageMapId").notNull(), // "garten", "buero", etc.
+  name: text("name").notNull(),
+  nameDe: text("name_de"),
+  nameEn: text("name_en"),
+  nameSl: text("name_sl"),
+  x: real("x").notNull(), // Pixel X-Koordinate
+  y: real("y").notNull(), // Pixel Y-Koordinate
+  difficulty: text("difficulty", { enum: ["easy", "medium", "hard"] }).default("medium"),
   createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
 });
 
@@ -185,6 +199,7 @@ export type Group = typeof groups.$inferSelect;
 export type GroupMember = typeof groupMembers.$inferSelect;
 export type Location = typeof locations.$inferSelect;
 export type WorldLocation = typeof worldLocations.$inferSelect;
+export type ImageLocation = typeof imageLocations.$inferSelect;
 export type Game = typeof games.$inferSelect;
 export type GameRound = typeof gameRounds.$inferSelect;
 export type Guess = typeof guesses.$inferSelect;

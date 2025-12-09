@@ -8,13 +8,15 @@ import {
   groupMembers,
   locations,
   worldLocations,
+  imageLocations,
 } from "@/lib/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { NextResponse } from "next/server";
-import { calculateDistance } from "@/lib/distance";
+import { calculateDistance, calculatePixelDistance } from "@/lib/distance";
 import { getTimeoutPenalty } from "@/lib/countries";
 import { calculateScore } from "@/lib/score";
+import { isImageGameType, getImageMapId, getGameTypeConfig } from "@/lib/game-types";
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
@@ -123,6 +125,9 @@ export async function GET(request: Request) {
       userGuessesRaw.map(async (guess) => {
         let locationData: { name: string; latitude: number; longitude: number } | null = null;
 
+        // Fallback for old rounds without gameType
+        const effectiveGameType = guess.gameType || `country:${guess.country || 'switzerland'}`;
+
         if (guess.locationSource === "worldLocations") {
           const loc = await db
             .select({ name: worldLocations.name, latitude: worldLocations.latitude, longitude: worldLocations.longitude })
@@ -130,6 +135,17 @@ export async function GET(request: Request) {
             .where(eq(worldLocations.id, guess.locationId))
             .get();
           locationData = loc || null;
+        } else if (guess.locationSource === "imageLocations" || isImageGameType(effectiveGameType)) {
+          // Image-based locations use x/y pixel coordinates
+          const loc = await db
+            .select({ name: imageLocations.name, x: imageLocations.x, y: imageLocations.y })
+            .from(imageLocations)
+            .where(eq(imageLocations.id, guess.locationId))
+            .get();
+          if (loc) {
+            // For ImageMap, lat=y and lng=x (Leaflet CRS.Simple convention)
+            locationData = { name: loc.name, latitude: loc.y, longitude: loc.x };
+          }
         } else {
           const loc = await db
             .select({ name: locations.name, latitude: locations.latitude, longitude: locations.longitude })
@@ -138,9 +154,6 @@ export async function GET(request: Request) {
             .get();
           locationData = loc || null;
         }
-
-        // Fallback for old rounds without gameType
-        const effectiveGameType = guess.gameType || `country:${guess.country || 'switzerland'}`;
 
         return {
           id: guess.id,
@@ -264,6 +277,9 @@ export async function POST(request: Request) {
     }
 
     // Get location coordinates - query correct table based on locationSource
+    const effectiveGameType = round.gameType || `country:${round.country}`;
+    const isImage = isImageGameType(effectiveGameType);
+
     let location: { latitude: number; longitude: number } | undefined;
 
     if (round.locationSource === "worldLocations") {
@@ -273,6 +289,17 @@ export async function POST(request: Request) {
         .where(eq(worldLocations.id, round.locationId))
         .get();
       location = worldLoc;
+    } else if (round.locationSource === "imageLocations" || isImage) {
+      // Image-based locations use x/y pixel coordinates
+      const imageLoc = await db
+        .select({ x: imageLocations.x, y: imageLocations.y })
+        .from(imageLocations)
+        .where(eq(imageLocations.id, round.locationId))
+        .get();
+      if (imageLoc) {
+        // For ImageMap, lat=y and lng=x (Leaflet CRS.Simple convention)
+        location = { latitude: imageLoc.y, longitude: imageLoc.x };
+      }
     } else {
       const countryLoc = await db
         .select({ latitude: locations.latitude, longitude: locations.longitude })
@@ -289,11 +316,22 @@ export async function POST(request: Request) {
       );
     }
 
-    // Calculate distance (country-specific penalty for timeout)
+    // Calculate distance
     let distanceKm: number;
     if (timeout) {
-      distanceKm = getTimeoutPenalty(round.country);
+      // Get timeout penalty from game type config (always in km)
+      const gameTypeConfig = getGameTypeConfig(effectiveGameType);
+      distanceKm = gameTypeConfig.timeoutPenalty;
+    } else if (isImage) {
+      // For image maps: use pixel distance (92px = 10m)
+      distanceKm = calculatePixelDistance(
+        longitude, // x = lng
+        latitude,  // y = lat
+        location.longitude,
+        location.latitude
+      );
     } else {
+      // For geo maps: use Haversine formula
       distanceKm = calculateDistance(
         latitude,
         longitude,
@@ -316,7 +354,6 @@ export async function POST(request: Request) {
     });
 
     // Calculate score based on game type
-    const effectiveGameType = round.gameType || `country:${round.country}`;
     const score = calculateScore(distanceKm, effectiveGameType);
 
     return NextResponse.json({
