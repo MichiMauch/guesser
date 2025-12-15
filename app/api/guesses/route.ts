@@ -157,6 +157,7 @@ export async function GET(request: Request) {
 
         return {
           id: guess.id,
+          gameRoundId: guess.gameRoundId,
           latitude: guess.latitude,
           longitude: guess.longitude,
           distanceKm: guess.distanceKm,

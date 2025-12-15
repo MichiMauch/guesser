@@ -90,7 +90,7 @@ export default function CountryMap({
   const [geoData, setGeoData] = useState<GeoJSON.FeatureCollection | null>(null);
 
   // Determine the effective game type
-  const effectiveGameType = gameType || (country ? `country:${country}` : DEFAULT_GAME_TYPE);
+  const effectiveGameType = gameType ?? (country ? `country:${country}` : DEFAULT_GAME_TYPE);
   const gameTypeConfig = getGameTypeConfig(effectiveGameType);
 
   const isWorldMap = gameTypeConfig.bounds === null;

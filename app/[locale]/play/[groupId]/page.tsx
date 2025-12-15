@@ -85,10 +85,7 @@ export default function PlayPage({
 
   const fetchGameData = useCallback(async () => {
     try {
-      const [gameRes, guessesRes] = await Promise.all([
-        fetch(`/api/games?groupId=${groupId}`),
-        fetch(`/api/guesses?gameId=temp`),
-      ]);
+      const gameRes = await fetch(`/api/games?groupId=${groupId}`);
 
       if (gameRes.ok) {
         const gameData = await gameRes.json();
@@ -113,6 +110,7 @@ export default function PlayPage({
             const playedGameRoundIds = new Set(
               guessesData.map((g: Guess) => g.gameRoundId)
             );
+
             const nextUnplayed = released.findIndex(
               (r: GameRound) => !playedGameRoundIds.has(r.id)
             );
@@ -139,6 +137,8 @@ export default function PlayPage({
 
   const releasedRounds = rounds.filter((r) => game && r.roundNumber <= game.currentRound);
   const currentRound = releasedRounds[currentRoundIndex];
+
+
   const isLocationPlayed = userGuesses.some(
     (g) => g.gameRoundId === currentRound?.id
   );
@@ -571,11 +571,13 @@ export default function PlayPage({
 
   const buttonConfig = getButtonConfig();
 
+  const mapGameType = currentRound?.gameType ?? (game ? getEffectiveGameType(game) : undefined);
+
   return (
     <div className="h-[calc(100dvh-52px)] max-w-[1440px] mx-auto relative">
       {/* Fullscreen Map */}
       <CountryMap
-        gameType={currentRound?.gameType || (game ? getEffectiveGameType(game) : undefined)}
+        gameType={mapGameType}
         country={currentRound?.country ?? game?.country ?? DEFAULT_COUNTRY}
         onMarkerPlace={showResult || timeExpired ? undefined : setMarkerPosition}
         markerPosition={markerPosition}
