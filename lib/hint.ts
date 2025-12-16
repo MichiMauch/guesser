@@ -166,11 +166,17 @@ export const HINT_CIRCLE_RADIUS_KM = 60;
 
 /**
  * Get the hint circle radius based on game type.
- * Uses 60% of the scoreScaleFactor to create a proportionally sized hint circle.
+ * World maps get a fixed 3000km radius, others use 60% of scoreScaleFactor.
  */
 export function getHintCircleRadius(gameType: string): number {
   const config = getGameTypeConfig(gameType);
-  // Radius = ~60% of scoreScaleFactor (visible but not too easy)
-  // Results in: Switzerland ~60km, World ~1800km, Image maps ~21m
+
+  // World maps get fixed 3000km radius
+  if (config.type === "world") {
+    return 3000;
+  }
+
+  // Other game types: 60% of scoreScaleFactor
+  // Results in: Switzerland ~60km, Image maps ~21m
   return config.scoreScaleFactor * 0.6;
 }
